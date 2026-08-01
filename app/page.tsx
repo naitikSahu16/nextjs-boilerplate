@@ -1,129 +1,303 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
 
-const UPSTASH_ENDPOINT = "https://clean-sunbird-149824.upstash.io";
-const UPSTASH_TOKEN = "gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw";
+import { useState, FormEvent } from "react";
 
-interface Stats { totalSavings: number; cacheHitRate: number; tokensSaved: number; totalRequests: number; }
-
-function useCountUp(target: number, active: boolean, duration = 1400): number {
-  const [value, setValue] = useState(0);
-  const prev = useRef(0);
-  useEffect(() => {
-    if (!active) { setValue(target); prev.current = target; return; }
-    const s = prev.current, t0 = performance.now();
-    let raf: number;
-    const tick = (now: number) => {
-      const p = Math.min((now - t0) / duration, 1);
-      setValue(s + (target - s) * (1 - Math.pow(1 - p, 3)));
-      p < 1 ? (raf = requestAnimationFrame(tick)) : (prev.current = target);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, active, duration]);
-  return value;
+interface Stats {
+  active: boolean;
+  plan: string;
+  savedTokens: number;
+  totalSavingsUsd: number;
+  totalRequests: number;
+  cacheHitRate: number | null;
 }
 
-function StatCard({ label, value, prefix = "", suffix = "", decimals = 0, active, icon }: {
-  label: string; value: number; prefix?: string; suffix?: string; decimals?: number; active: boolean; icon: React.ReactNode;
-}) {
-  const v = useCountUp(value, active);
-  const d = decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString("en-US");
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] p-6 backdrop-blur-xl transition-all duration-300 hover:border-[#00e5b5]/30 hover:bg-white/[0.05] hover:shadow-[0_0_30px_rgba(0,229,181,0.07)]">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00e5b5]/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#00e5b5]/10 text-[#00e5b5]">{icon}</div>
-      <div className="text-3xl font-bold tracking-tight text-white tabular-nums">{prefix}{d}{suffix}</div>
-      <div className="mt-1.5 text-sm text-slate-400">{label}</div>
-    </div>
-  );
-}
+const usd = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+});
+const int = new Intl.NumberFormat("en-US");
 
-function StepCard({ step, title, desc, delay }: { step: string; title: string; desc: string; delay: number }) {
-  return (
-    <div className="step-card rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04]" style={{ animationDelay: `${delay}ms` }}>
-      <span className="text-xs font-bold tracking-widest text-[#00e5b5]/50">{step}</span>
-      <h3 className="mt-2 text-base font-semibold text-white">{title}</h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
-    </div>
-  );
-}
-
-const particles = [
-  { t:"12%",l:"5%",a:"orb-drift-1",d:"14s",dl:"0s" },{ t:"23%",l:"17%",a:"orb-drift-2",d:"17s",dl:"0.7s" },
-  { t:"34%",l:"29%",a:"orb-drift-3",d:"20s",dl:"1.4s" },{ t:"45%",l:"41%",a:"orb-drift-1",d:"23s",dl:"2.1s" },
-  { t:"56%",l:"53%",a:"orb-drift-2",d:"26s",dl:"2.8s" },{ t:"67%",l:"65%",a:"orb-drift-3",d:"29s",dl:"3.5s" },
-  { t:"78%",l:"77%",a:"orb-drift-1",d:"32s",dl:"4.2s" },{ t:"89%",l:"89%",a:"orb-drift-2",d:"35s",dl:"4.9s" },
-];
-
-const icons = {
-  dollar: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
-  bolt: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-  download: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
-  pulse: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-};
-
-export default function Dashboard() {
+export default function Home() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [verified, setVerified] = useState(false);
-  const [stats, setStats] = useState<Stats>({ totalSavings: 0, cacheHitRate: 0, tokensSaved: 0, totalRequests: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
 
-  const handleAnalyze = async () => {
-    const key = apiKey.trim();
-    if (!key) { setError("Please enter your TokenTrim API key."); return; }
-    setLoading(true); setError(""); setVerified(false);
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!apiKey.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetch(`${UPSTASH_ENDPOINT}/get/user:${key}`, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } });
-      if (!res.ok) throw new Error("Network error — please try again.");
-      const json = await res.json();
-      if (!json.result) throw new Error("Invalid API key — no data found.");
-      let user: { active: boolean; plan: string; saved_tokens: number };
-      try { user = JSON.parse(json.result); } catch { throw new Error("Corrupted data."); }
-      if (!user.active) throw new Error("This API key is inactive.");
-      const st = user.saved_tokens || 0;
-      setStats({ totalSavings: (st / 1000) * 0.015, cacheHitRate: st > 0 ? Math.min(72.4, 28 + st / 80) : 0, tokensSaved: st, totalRequests: Math.ceil(st / 45) });
-      setVerified(true);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Unexpected error.");
-    } finally { setLoading(false); }
-  };
+      const res = await fetch("/api/verify-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: apiKey.trim() }),
+      });
+      const data = await res.json();
 
-  const pruningSavings = ((stats.tokensSaved * 0.6) / 1000) * 0.015;
-  const cacheSavings = ((stats.tokensSaved * 0.4) / 1000) * 0.015;
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong.");
+        setStats(null);
+      } else {
+        setStats(data);
+      }
+    } catch {
+      setError("Network error — try again.");
+      setStats(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <>
-      {/* Background */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.15) 1px,transparent 1px)", backgroundSize: "64px 64px" }} />
-        <div className="absolute -top-48 -left-48 h-[650px] w-[650px] rounded-full opacity-[0.18] blur-[130px]" style={{ background: "radial-gradient(circle,#00e5b5 0%,transparent 70%)", animation: "orb-drift-1 22s ease-in-out infinite" }} />
-        <div className="absolute -right-56 top-1/2 h-[520px] w-[520px] rounded-full opacity-[0.13] blur-[110px]" style={{ background: "radial-gradient(circle,#22c55e 0%,transparent 70%)", animation: "orb-drift-2 28s ease-in-out infinite" }} />
-        <div className="absolute -bottom-44 left-1/3 h-[420px] w-[420px] rounded-full opacity-[0.09] blur-[110px]" style={{ background: "radial-gradient(circle,#00e5b5 0%,transparent 70%)", animation: "orb-drift-3 19s ease-in-out infinite" }} />
-        {particles.map((p, i) => (
-          <div key={i} className="absolute h-[2px] w-[2px] rounded-full bg-[#00e5b5]/30" style={{ top: p.t, left: p.l, animation: `${p.a} ${p.d} ease-in-out infinite`, animationDelay: p.dl }} />
-        ))}
+    <main className="min-h-screen bg-base bg-grid">
+      <TopNav />
+      <Hero />
+      <section className="mx-auto max-w-6xl px-6 pb-28">
+        <StatsRow stats={stats} />
+        <InputModule
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          loading={loading}
+          error={error}
+          verified={stats !== null}
+          onSubmit={handleSubmit}
+        />
+      </section>
+      <Footer />
+    </main>
+  );
+}
+
+function TopNav() {
+  return (
+    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-7">
+      <div className="flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-cyan/10 text-cyan">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 12h9M13 12l-3.5-3.5M13 12l-3.5 3.5M17 6v12"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span className="font-display text-lg font-medium tracking-tight">
+          TokenTrim
+        </span>
+      </div>
+      <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
+        <a href="#" className="transition hover:text-white">
+          Docs
+        </a>
+        <a href="#" className="transition hover:text-white">
+          Pricing
+        </a>
+        <a href="#" className="transition hover:text-white">
+          GitHub
+        </a>
+      </nav>
+      <a
+        href="#analyze"
+        className="rounded-full border border-cyan/30 bg-cyan/10 px-4 py-2 text-sm font-medium text-cyan transition hover:bg-cyan/20"
+      >
+        Get API Key
+      </a>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="mx-auto grid max-w-6xl gap-16 px-6 pb-20 pt-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <div className="animate-fade-up">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-widest text-cyan">
+          Edge-deployed semantic cache
+        </span>
+        <h1 className="mt-6 font-display text-5xl font-medium leading-[1.05] tracking-tight sm:text-6xl">
+          Cut your OpenAI bills
+          <br />
+          by{" "}
+          <span className="text-cyan text-glow">50%.</span>
+        </h1>
+        <p className="mt-6 max-w-md text-base leading-relaxed text-white/60">
+          TokenTrim sits in front of every agent request. It prunes dead
+          conversation history, hashes what&apos;s left, and serves a cached
+          reply before your OpenAI bill even notices — built for CrewAI and
+          LangChain agents running at scale.
+        </p>
+        <div className="mt-8 flex items-center gap-4">
+          <a
+            href="#analyze"
+            className="rounded-lg bg-cyan px-5 py-3 text-sm font-semibold text-base transition hover:bg-cyan-soft glow-cyan"
+          >
+            Analyze my savings
+          </a>
+          <span className="font-mono text-xs text-white/40">
+            no signup · just your API key
+          </span>
+        </div>
       </div>
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#030712]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00e5b5]/15">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00e5b5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            </div>
-            <span className="text-lg font-bold tracking-tight text-white">TokenTrim</span>
-          </div>
-          <div className="hidden items-center gap-8 text-sm text-slate-400 sm:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-white">How It Works</a>
-            <a href="#dashboard" className="transition-colors hover:text-white">Dashboard</a>
-          </div>
-          <span className="hidden text-[11px] font-medium tracking-wide text-slate-600 sm:inline">EDGE DEPLOYED</span>
-        </div>
-      </nav>
+      <TrimVisualization />
+    </section>
+  );
+}
 
-      <main className="mx-auto max-w-6xl px-6 pb-28">
-        {/* Hero */}
-        <section className="pt-24 pb-16 text-center">
-          <div className="anim-fade-up mb-7 inline-flex items-center gap-2 rounded-full border border-[#00e5b5]/20 bg-[#00e5b5]/[0.06] px-
+/**
+ * The signature element: a literal picture of what the Cloudflare Worker
+ * does on every request — collapsing a long conversation down to just the
+ * system prompt and the final user message before it ever reaches OpenAI.
+ */
+function TrimVisualization() {
+  const kept = "border-signal/40 bg-signal/[0.07] text-white";
+  const pruned =
+    "border-white/10 bg-white/[0.02] text-white/30 line-through decoration-white/20";
+
+  return (
+    <div className="glass animate-fade-up rounded-2xl p-5" style={{ animationDelay: "120ms" }}>
+      <div className="mb-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-widest text-white/40">
+        <span>payload · before forwarding</span>
+        <span className="rounded-full bg-cyan/10 px-2 py-0.5 text-cyan">−73% tokens</span>
+      </div>
+
+      <ol className="space-y-2 font-mono text-xs">
+        <li className={`rounded-lg border px-3 py-2 ${kept}`}>
+          <span className="text-signal">[system]</span> You are a support agent for…
+        </li>
+        <li className={`rounded-lg border px-3 py-2 ${pruned}`}>
+          [user] Here&apos;s my order number, it&apos;s…
+        </li>
+        <li className={`rounded-lg border px-3 py-2 ${pruned}`}>
+          [assistant] Thanks, let me look that up…
+        </li>
+        <li className={`rounded-lg border px-3 py-2 ${pruned}`}>
+          [user] It still hasn&apos;t arrived and…
+        </li>
+        <li className={`rounded-lg border px-3 py-2 ${pruned}`}>
+          [assistant] I understand the frustration…
+        </li>
+        <li className={`rounded-lg border px-3 py-2 ${kept} glow-cyan`}>
+          <span className="text-signal">[user]</span> Can you just refund it?
+        </li>
+      </ol>
+
+      <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4 font-mono text-[11px] text-white/40">
+        <span>812 tokens in</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M5 12h14M13 6l6 6-6 6"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="text-cyan">219 tokens out</span>
+      </div>
+    </div>
+  );
+}
+
+function StatsRow({ stats }: { stats: Stats | null }) {
+  const cards = [
+    {
+      label: "Total savings",
+      value: stats ? usd.format(stats.totalSavingsUsd) : "—",
+    },
+    {
+      label: "Cache hit rate",
+      value: stats && stats.cacheHitRate !== null ? `${stats.cacheHitRate}%` : "—",
+      note: !stats ? undefined : "not yet tracked by backend",
+    },
+    {
+      label: "Tokens saved",
+      value: stats ? int.format(stats.savedTokens) : "—",
+    },
+    {
+      label: "Requests processed",
+      value: stats ? int.format(stats.totalRequests) : "—",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-4 pt-8 lg:grid-cols-4">
+      {cards.map((c) => (
+        <div key={c.label} className="glass rounded-xl p-5">
+          <p className="text-xs font-medium uppercase tracking-widest text-white/40">
+            {c.label}
+          </p>
+          <p className="mt-3 font-mono text-3xl font-semibold text-white">
+            {c.value}
+          </p>
+          {c.note && (
+            <p className="mt-1 text-[11px] text-white/30">{c.note}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InputModule({
+  apiKey,
+  setApiKey,
+  loading,
+  error,
+  verified,
+  onSubmit,
+}: {
+  apiKey: string;
+  setApiKey: (v: string) => void;
+  loading: boolean;
+  error: string | null;
+  verified: boolean;
+  onSubmit: (e: FormEvent) => void;
+}) {
+  return (
+    <div id="analyze" className="glass mt-10 scroll-mt-24 rounded-2xl p-6 sm:p-8">
+      <h2 className="font-display text-xl font-medium">Check your savings</h2>
+      <p className="mt-1 text-sm text-white/50">
+        Enter your TokenTrim API key to pull real usage from your account.
+      </p>
+
+      <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <input
+          type="text"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="tt_live_••••••••••••"
+          className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 font-mono text-sm text-white placeholder:text-white/25 outline-none transition focus:border-cyan/50 focus:ring-1 focus:ring-cyan/50"
+          spellCheck={false}
+          autoComplete="off"
+        />
+        <button
+          type="submit"
+          disabled={loading || !apiKey.trim()}
+          className="rounded-lg bg-cyan px-6 py-3 text-sm font-semibold text-base transition hover:bg-cyan-soft disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {loading ? "Analyzing…" : "Analyze My Savings"}
+        </button>
+      </form>
+
+      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {verified && !error && (
+        <p className="mt-3 text-sm text-signal">Key verified — figures above are live.</p>
+      )}
+    </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mx-auto max-w-6xl px-6 pb-10 pt-4 text-xs text-white/30">
+      TokenTrim — token counts are estimates based on character-length pruning, not exact tokenizer output.
+    </footer>
+  );
+}
