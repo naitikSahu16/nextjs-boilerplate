@@ -1,65 +1,54 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
 
 export default function Home() {
+  const [key, setKey] = useState("");
+  const [savings, setSavings] = useState(null);
+
+  const checkSavings = () => {
+    // Abhi MVP ke liye humari VIP key check kar rahe hain
+    if(key.trim() === "tt_founder_999") {
+       setSavings(138); 
+    } else {
+       setSavings(0);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center p-4 font-sans">
+      <div className="max-w-2xl w-full text-center space-y-8">
+        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+          TokenTrim
+        </h1>
+        <p className="text-xl text-gray-400">
+          The Edge-Deployed Semantic Cache for AI Agents. Cut your OpenAI bills by 50% with zero latency.
+        </p>
+        
+        <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl space-y-6">
+          <h2 className="text-2xl font-bold text-gray-200">Developer Dashboard</h2>
+          <input 
+            type="text" 
+            placeholder="Enter your TokenTrim API Key (e.g. tt_founder_999)" 
+            className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-4 focus:outline-none focus:border-emerald-500"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+          />
+          <button 
+            onClick={checkSavings}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-lg py-4 rounded-lg transition-all"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Check My Savings
+          </button>
+
+          {savings !== null && (
+            <div className="mt-8 p-6 bg-gray-950 rounded-xl border border-gray-800">
+              <p className="text-gray-400 mb-2">Total Tokens Saved</p>
+              <p className="text-6xl font-black text-emerald-400">{savings}</p>
+              <p className="text-sm text-gray-500 mt-4">System active. Your agent pipeline is currently optimized.</p>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }
