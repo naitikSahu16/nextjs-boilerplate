@@ -6,6 +6,8 @@ export default function Home() {
   const [key, setKey] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false); 
+  // NEW: Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const inputRef = useRef(null);
   
   const [data, setData] = useState({
@@ -14,6 +16,23 @@ export default function Home() {
     requests: 0,
     hitRate: 0,
   });
+
+  // NEW: Login / Signup Handlers
+  const handleAuth = (type) => {
+    setIsLoggedIn(true);
+    // Demo Magic: Auto-filling the valid key for a seamless experience
+    setKey("tt_founder_999"); 
+    if(type === 'signup') {
+      alert("✨ Welcome to TokenTrim! Your new API key has been generated.");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setKey("");
+    setIsUnlocked(false);
+    setData({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
+  };
 
   const handleGetStarted = () => {
     if (inputRef.current) {
@@ -31,7 +50,6 @@ export default function Home() {
     setIsUnlocked(false); 
 
     try {
-      // 1. TRY FETCHING FROM REAL UPSTASH DB
       const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/user:${key.trim()}`, {
         headers: { Authorization: "Bearer gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw" }
       });
@@ -40,17 +58,14 @@ export default function Home() {
       let realTokens = 0;
 
       if (dbResponse.result) {
-        // Data found in database
         const userData = JSON.parse(dbResponse.result);
         realTokens = userData.saved_tokens || 0;
       } else if (key.trim() === "tt_founder_999") {
-        // 2. FOUNDER DEMO FALLBACK (If DB is currently empty)
         realTokens = 138; 
       } else {
         throw new Error("Invalid Key");
       }
 
-      // MATH CALCULATION FOR UI
       setData({
         tokens: realTokens,
         savings: (realTokens / 1000) * 0.015,
@@ -58,12 +73,10 @@ export default function Home() {
         hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
       });
       
-      setIsUnlocked(true); // SUCCESS! UNLOCK THE PADLOCK
+      setIsUnlocked(true); 
 
     } catch (err) {
-      // 3. NETWORK ERROR / WRONG KEY HANDLING
       if (key.trim() === "tt_founder_999") {
-         // Founder key fallback for demo purposes
          let mockTokens = 138;
          setData({
            tokens: mockTokens,
@@ -74,7 +87,6 @@ export default function Home() {
          setIsUnlocked(true);
       } else {
          setIsUnlocked(false);
-         // PROFESSIONAL ENGLISH ERROR MESSAGE
          alert("❌ Invalid API Key! Access Denied. Please check your key and try again.");
       }
     }
@@ -86,13 +98,34 @@ export default function Home() {
     <div className="min-h-screen bg-[#020614] text-white font-sans py-6 px-4 flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden">
       <div className="w-full max-w-[800px] flex flex-col gap-6">
         
-        {/* NAVBAR */}
+        {/* UPDATED NAVBAR WITH AUTH */}
         <nav className="flex items-center justify-between w-full pb-4">
           <div className="text-xl font-bold tracking-tight">TokenTrim</div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0b1120] border border-[#1e293b] text-xs font-medium text-slate-300">
+          
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0b1120] border border-[#1e293b] text-xs font-medium text-slate-300">
             <span className="text-[#f59e0b]">⚡</span> Edge-Deployed Cache
           </div>
-          <div className="flex-none w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center text-slate-300 text-sm font-bold border border-[#334155]">TT</div>
+
+          <div className="flex items-center gap-4">
+            {!isLoggedIn ? (
+              <>
+                <button onClick={() => handleAuth('login')} className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden sm:block">
+                  Sign in
+                </button>
+                <button onClick={() => handleAuth('signup')} className="bg-[#00e5b5] text-black text-sm font-bold py-1.5 px-4 rounded-lg hover:bg-[#00c090] transition-all shadow-[0_0_15px_rgba(0,229,181,0.15)]">
+                  Get API Key
+                </button>
+              </>
+            ) : (
+              <div 
+                onClick={handleLogout}
+                title="Click to Logout"
+                className="flex-none w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center text-slate-300 text-sm font-bold border border-[#334155] cursor-pointer hover:bg-[#334155] transition-colors"
+              >
+                TT
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* HERO */}
