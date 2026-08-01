@@ -22,33 +22,62 @@ export default function Home() {
   };
 
   const checkSavings = async () => {
-    if (!key.trim()) return;
+    if (!key.trim()) {
+      alert("Please enter an API Key first.");
+      return;
+    }
+    
     setIsAnalyzing(true);
     setIsUnlocked(false); 
 
     try {
+      // 1. TRY FETCHING FROM REAL UPSTASH DB
       const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/user:${key.trim()}`, {
         headers: { Authorization: "Bearer gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw" }
       });
       const dbResponse = await res.json();
+      
+      let realTokens = 0;
 
       if (dbResponse.result) {
+        // DB me data mil gaya
         const userData = JSON.parse(dbResponse.result);
-        const realTokens = userData.saved_tokens || 0;
-        
-        setData({
-          tokens: realTokens,
-          savings: (realTokens / 1000) * 0.015,
-          requests: Math.ceil(realTokens / 45),
-          hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
-        });
-        setIsUnlocked(true); 
+        realTokens = userData.saved_tokens || 0;
+      } else if (key.trim() === "tt_founder_999") {
+        // 2. FOUNDER DEMO FALLBACK (Agar DB abhi khali hai)
+        realTokens = 138; 
       } else {
-        setIsUnlocked(false); 
+        throw new Error("Invalid Key");
       }
+
+      // MATH CALCULATION FOR UI
+      setData({
+        tokens: realTokens,
+        savings: (realTokens / 1000) * 0.015,
+        requests: Math.ceil(realTokens / 45),
+        hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
+      });
+      
+      setIsUnlocked(true); // TALA KHUL GAYA!
+
     } catch (err) {
-      setIsUnlocked(false);
+      // 3. NETWORK ERROR / WRONG KEY HANDLING
+      if (key.trim() === "tt_founder_999") {
+         // Agar network block ho jaye toh bhi founder key chalni chahiye
+         let mockTokens = 138;
+         setData({
+           tokens: mockTokens,
+           savings: (mockTokens / 1000) * 0.015,
+           requests: Math.ceil(mockTokens / 45),
+           hitRate: Number((40 + Math.random() * 20).toFixed(1)),
+         });
+         setIsUnlocked(true);
+      } else {
+         setIsUnlocked(false);
+         alert("❌ Invalid API Key! Access Denied. Tala band hi rahega.");
+      }
     }
+    
     setIsAnalyzing(false);
   };
 
@@ -109,7 +138,7 @@ export default function Home() {
             disabled={isAnalyzing}
             className="w-full bg-[#00e5b5] text-black font-semibold py-3.5 md:py-4 rounded-lg transition-all flex justify-center items-center gap-2 hover:bg-[#00c090] disabled:opacity-50 text-base md:text-lg"
           >
-            {isAnalyzing ? "Analyzing..." : "Analyze My Savings ↗"}
+            {isAnalyzing ? "Analyzing Data..." : "Analyze My Savings ↗"}
           </button>
           
           <div className="mt-4 flex flex-row items-center justify-center gap-2 text-xs md:text-sm text-slate-500">
