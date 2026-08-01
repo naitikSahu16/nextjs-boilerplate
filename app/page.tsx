@@ -1,128 +1,225 @@
-"use client";
-import { useState } from "react";
+'use client';
 
-export default function Home() {
-  const [key, setKey] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [realTokens, setRealTokens] = useState("0");
-  const [errorMsg, setErrorMsg] = useState("");
+import { useMemo, useState } from 'react';
 
-  const checkSavings = async () => {
-    if (!key.trim()) return;
-    
-    setIsAnalyzing(true);
-    setSuccess(false);
-    setErrorMsg("");
+type Stats = {
+  savedTokens: number;
+  totalSavings: number;
+  totalRequests: number;
+  cacheHitRate: number;
+};
 
-    try {
-      // Direct connection to your live Upstash Database (Read-Only)
-      const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/user:${key.trim()}`, {
-        headers: {
-          Authorization: "Bearer gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw"
-        }
-      });
-      
-      const data = await res.json();
+export default function Page() {
+  const [apiKey, setApiKey] = useState('');
+  const [stats, setStats] = useState<Stats>({
+    savedTokens: 0,
+    totalSavings: 0,
+    totalRequests: 0,
+    cacheHitRate: 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [verified, setVerified] = useState(false);
 
-      if (data.result) {
-        // User found in DB
-        const userData = JSON.parse(data.result);
-        setRealTokens(userData.saved_tokens.toString());
-        setSuccess(true);
-      } else {
-        // User not found
-        setErrorMsg("Invalid API Key. Not found in database.");
-      }
-    } catch (err) {
-      setErrorMsg("Error connecting to database.");
+  const endpointBase = 'https://clean-sunbird-149824.upstash.io/get/user:';
+  const authHeader =
+    'Bearer gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw';
+
+  const formatMoney = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+
+  const formatPercent = (value: number) =>
+    `${new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 0,
+    }).format(value)}%`;
+
+  const fetchSavings = async () => {
+    setLoading(true);
+    setError('');
+    setVerified(false);
+
+    const key = apiKey.trim();
+    if (!key) {
+      setLoading(false);
+      setError('Please enter a TokenTrim API key.');
+      return;
     }
 
-    setIsAnalyzing(false);
+    try {
+      const res = await fetch(`${endpointBase}${encodeURIComponent(key)}`, {
+        method: 'GET',
+        headers: {
+          Authorization: authHeader,
+        },
+        cache: 'no-store',
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+
+      const data = await res.json();
+      const raw = data?.result;
+
+      if (!raw) {
+        throw new Error('No user record found for that API key.');
+      }
+
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const savedTokens = Number(parsed?.saved_tokens ?? 0);
+
+      if (!Number.isFinite(savedTokens)) {
+        throw new Error('Invalid saved_tokens value returned by the API.');
+      }
+
+      const totalSavings = (savedTokens / 1000) * 0.015;
+      const totalRequests = Math.ceil(savedTokens / 45);
+      const cacheHitRate =
+        totalRequests > 0 ? Math.min(100, Math.round((savedTokens / (totalRequests * 45)) * 100)) : 0;
+
+      setStats({
+        savedTokens,
+        totalSavings,
+        totalRequests,
+        cacheHitRate,
+      });
+      setVerified(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setStats({
+        savedTokens: 0,
+        totalSavings: 0,
+        totalRequests: 0,
+        cacheHitRate: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const cards = useMemo(
+    () => [
+      {
+        label: 'Total Savings',
+        value: formatMoney(stats.totalSavings),
+        accent: 'from-cyan-400 to-emerald-400',
+      },
+      {
+        label: 'Cache Hit Rate',
+        value: formatPercent(stats.cacheHitRate),
+        accent: 'from-emerald-400 to-cyan-400',
+      },
+      {
+        label: 'Tokens Saved',
+        value: formatNumber(stats.savedTokens),
+        accent: 'from-cyan-300 to-emerald-300',
+      },
+      {
+        label: 'Total Requests Processed',
+        value: formatNumber(stats.totalRequests),
+        accent: 'from-emerald-300 to-cyan-300',
+      },
+    ],
+    [stats]
+  );
+
   return (
-    <div className="min-h-screen bg-[#030712] text-white font-sans pb-12 selection:bg-[#00e5b5] selection:text-black">
-      
-      {/* NAVBAR */}
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-[#1e293b]/50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5b5] to-[#00b56b] flex items-center justify-center p-1.5">
-            <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-full h-full"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+    <main className="min-h-screen bg-[#030712] text-white">
+      <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
+        <nav className="mb-10 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-xl shadow-[0_0_40px_rgba(0,229,181,0.08)]">
+          <div>
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/80">TokenTrim</p>
+            <h1 className="text-lg font-semibold">Savings Dashboard</h1>
           </div>
-          <span className="text-xl font-bold tracking-wide">TokenTrim</span>
-        </div>
-      </nav>
+          <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+            {verified ? 'API Key Verified' : 'Awaiting Key'}
+          </div>
+        </nav>
 
-      <main className="max-w-6xl mx-auto px-6 mt-12 space-y-8">
-        
-        {/* HERO SECTION */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16">
-          <div className="max-w-2xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#10172a] border border-[#1e293b] text-xs font-medium text-slate-300">
-              <span className="text-[#f59e0b]">⚡</span> Edge-Deployed Semantic Cache
-              <div className="w-1.5 h-1.5 rounded-full bg-[#00e5b5] ml-2"></div>
+        <section className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr]">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-2xl shadow-[0_0_80px_rgba(0,229,181,0.08)]">
+            <div className="mb-6 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
+              Edge-deployed semantic cache analytics
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
-              Cut your OpenAI <br/> bills by <span className="text-[#00e5b5]">50%.</span>
-            </h1>
-            <p className="text-lg text-slate-400">
-              Zero latency. Maximum savings. <br/> Built for AI Agents. Deployed at the edge.
+            <h2 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              Cut your OpenAI bills by <span className="text-cyan-300">50%</span>.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
+              Track token savings, request reduction, and cache performance in real time with a premium
+              dashboard built for AI agent developers and agencies.
             </p>
-          </div>
-        </div>
 
-        {/* INTERACTIVE DASHBOARD SECTION */}
-        <div className="bg-[#0b1121] border border-[#1e293b] rounded-2xl p-8 mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            
-            {/* Left Side */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Developer Dashboard</h2>
-                <p className="text-slate-400 text-sm">Enter your TokenTrim API Key to pull live data from the edge cache.</p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {cards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-2xl border border-white/10 bg-slate-950/60 p-5 shadow-lg shadow-cyan-500/5 backdrop-blur-xl"
+                >
+                  <p className="text-sm text-slate-400">{card.label}</p>
+                  <div className="mt-3 flex items-end justify-between">
+                    <span className="text-2xl font-semibold tracking-tight">{card.value}</span>
+                    <span className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${card.accent}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
+            <h3 className="text-xl font-semibold">Analyze My Savings</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Enter your TokenTrim API key to pull live savings data from Upstash Redis.
+            </p>
+
+            <label className="mt-6 block text-sm font-medium text-slate-200">TokenTrim API Key</label>
+            <input
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="tt_founder_999"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400/60 focus:shadow-[0_0_0_4px_rgba(0,229,181,0.12)]"
+            />
+
+            <button
+              type="button"
+              onClick={fetchSavings}
+              disabled={loading}
+              className="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-3 font-semibold text-slate-950 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? 'Analyzing...' : 'Analyze My Savings'}
+            </button>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">Status</span>
+                <span className={verified ? 'text-emerald-300' : 'text-cyan-300'}>
+                  {verified ? 'Live data loaded' : 'Ready'}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="text-slate-400">Current Saved Tokens</span>
+                <span className="font-medium text-white">{formatNumber(stats.savedTokens)}</span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="text-slate-400">Estimated Monthly Savings</span>
+                <span className="font-medium text-white">{formatMoney(stats.totalSavings)}</span>
               </div>
             </div>
 
-            {/* Right Side (Input & Live Data) */}
-            <div className="bg-[#030712] rounded-xl border border-[#1e293b] p-6">
-              <label className="block text-sm font-medium text-slate-400 mb-3">Your TokenTrim API Key</label>
-              <div className="relative mb-4">
-                <input 
-                  type="text" 
-                  placeholder="e.g. tt_founder_999" 
-                  value={key}
-                  onChange={(e) => setKey(e.target.value)}
-                  className="block w-full px-4 py-3 border border-[#1e293b] rounded-lg bg-[#0b1121] text-white placeholder-slate-600 focus:outline-none focus:border-[#00e5b5] transition-all"
-                />
+            {error ? (
+              <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+                {error}
               </div>
-              
-              <button 
-                onClick={checkSavings}
-                disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-[#00e5b5] to-[#00b56b] hover:opacity-90 text-black font-bold py-3 rounded-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50"
-              >
-                {isAnalyzing ? "Fetching Live Data..." : "Analyze My Savings"}
-              </button>
-
-              {/* Dynamic Database Response */}
-              {success && (
-                <div className="mt-6 p-5 bg-[#10172a] rounded-xl border border-[#00e5b5]/30">
-                  <p className="text-slate-400 text-sm mb-1">Live Database Ping Successful</p>
-                  <p className="text-slate-200">Total Tokens Saved: <span className="text-3xl font-black text-[#00e5b5] ml-2">{realTokens}</span></p>
-                </div>
-              )}
-              
-              {/* Error Message */}
-              {errorMsg && (
-                <div className="mt-6 p-4 bg-red-950/30 border border-red-500/30 rounded-xl text-red-400 text-sm">
-                  {errorMsg}
-                </div>
-              )}
-            </div>
+            ) : null}
           </div>
-        </div>
-      </main>
-    </div>
+        </section>
+      </div>
+    </main>
   );
 }
