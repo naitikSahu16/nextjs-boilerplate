@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useState } from "react";
 
@@ -13,8 +12,8 @@ export default function Home() {
     savings: 0,
     requests: 0,
     hitRate: 0,
-    chartData: [20, 40, 30, 70, 50, 10], // Default placeholder heights
-    logs: []
+    chartData: [20, 40, 30, 70, 50, 10], 
+    logs: [] as any[] // TypeScript strictness fix
   });
 
   const checkSavings = async () => {
@@ -34,18 +33,16 @@ export default function Home() {
         const userData = JSON.parse(dbResponse.result);
         const realTokens = userData.saved_tokens || 0;
         
-        // DYNAMIC MATH BASED ON YOUR REAL DATABASE
+        // STRICT NUMBER MATH FOR TYPESCRIPT
         const calculatedSavings = (realTokens / 1000) * 0.015; 
-        const calculatedRequests = Math.ceil(realTokens / 45); // Assuming ~45 tokens saved per req
+        const calculatedRequests = Math.ceil(realTokens / 45); 
+        const calculatedHitRate = realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0;
         
-        // FIXED TYPE ERROR HERE: Replaced 0 with "0"
-        const calculatedHitRate = realTokens > 0 ? (40 + Math.random() * 20).toFixed(1) : "0";
-        
-        // Generating real-looking chart data based on the actual number
+        // Generated Charts
         const base = Math.max(10, realTokens / 10);
         const generatedChart = [base*0.2, base*0.4, base*0.6, base*0.8, base*1.1, base*1.5].map(v => Math.min(100, Math.max(10, v)));
 
-        // Generating real-looking logs based on the total
+        // Generated Logs
         const generatedLogs = [
           { type: "Hit", tokens: Math.floor(realTokens * 0.4), time: "2m ago", sign: "+", color: "text-[#00e5b5]" },
           { type: "Miss", tokens: Math.floor(realTokens * 0.2), time: "5m ago", sign: "-", color: "text-orange-400" },
@@ -57,7 +54,7 @@ export default function Home() {
           tokens: realTokens,
           savings: calculatedSavings,
           requests: calculatedRequests,
-          hitRate: parseFloat(calculatedHitRate),
+          hitRate: calculatedHitRate,
           chartData: generatedChart,
           logs: generatedLogs
         });
@@ -71,7 +68,7 @@ export default function Home() {
     setIsAnalyzing(false);
   };
 
-  const handleAction = (actionName) => {
+  const handleAction = (actionName: string) => {
     alert(`${actionName} module clicked. Routing system active.`);
   }
 
@@ -102,7 +99,6 @@ export default function Home() {
         
         {/* HERO SECTION */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-10 relative">
-          {/* Background Glow */}
           <div className="absolute top-10 right-10 w-96 h-96 bg-[#00e5b5]/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
           <div className="max-w-xl space-y-6 relative z-10">
@@ -126,7 +122,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Abstract Hero Graphic */}
           <div className="hidden md:flex relative w-80 h-80 items-center justify-center z-10">
             <div className="absolute w-64 h-80 border-2 border-[#00e5b5]/30 bg-[#00e5b5]/5 rounded-2xl transform rotate-12 -skew-y-12 shadow-[0_0_50px_rgba(0,229,181,0.15)] backdrop-blur-sm"></div>
             <div className="absolute w-64 h-80 border-2 border-[#00e5b5]/60 bg-[#00e5b5]/10 rounded-2xl transform -translate-x-8 -translate-y-8 rotate-12 -skew-y-12 backdrop-blur-md flex items-center justify-center">
@@ -140,10 +135,10 @@ export default function Home() {
         {/* 4 STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 relative">
           {[
-            { label: "Total Savings", value: `$${data.savings.toFixed(2)}`, icon: "$", color: "text-[#00e5b5]", bg: "bg-[#00e5b5]/10", trend: "↗ 50%", border: "border-[#1e293b]" },
-            { label: "Cache Hit Rate", value: `${data.hitRate}%`, icon: "⚡", color: "text-blue-400", bg: "bg-blue-400/10", trend: "↗ 12.4%", border: "border-[#1e293b]" },
-            { label: "Tokens Saved", value: data.tokens > 1000 ? `${(data.tokens/1000).toFixed(1)}K` : data.tokens, icon: "📊", color: "text-purple-400", bg: "bg-purple-400/10", trend: "↗ 842K", border: "border-[#1e293b]" },
-            { label: "Total Requests", value: data.requests.toLocaleString(), icon: "〰", color: "text-orange-400", bg: "bg-orange-400/10", trend: "↗ 18.6%", border: "border-[#1e293b]" }
+            { label: "Total Savings", value: `$${data.savings.toFixed(2)}`, icon: "$", color: "text-[#00e5b5]", bg: "bg-[#00e5b5]/10", trend: "↗ 50%" },
+            { label: "Cache Hit Rate", value: `${data.hitRate}%`, icon: "⚡", color: "text-blue-400", bg: "bg-blue-400/10", trend: "↗ 12.4%" },
+            { label: "Tokens Saved", value: data.tokens > 1000 ? `${(data.tokens/1000).toFixed(1)}K` : data.tokens, icon: "📊", color: "text-purple-400", bg: "bg-purple-400/10", trend: "↗ 842K" },
+            { label: "Total Requests", value: data.requests.toLocaleString(), icon: "〰", color: "text-orange-400", bg: "bg-orange-400/10", trend: "↗ 18.6%" }
           ].map((stat, i) => (
             <div key={i} className="bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 shadow-lg">
               <div className="flex items-center gap-3 mb-3">
@@ -159,7 +154,6 @@ export default function Home() {
         {/* DASHBOARD BOX */}
         <div className="bg-[#0b1221] border border-[#1e293b] rounded-2xl flex flex-col md:flex-row overflow-hidden shadow-2xl relative z-10 mt-2">
           
-          {/* Left Feature Info */}
           <div className="p-8 md:w-[45%] border-b md:border-b-0 md:border-r border-[#1e293b]">
              <h2 className="text-2xl font-bold mb-2 text-white">Developer Dashboard</h2>
              <p className="text-slate-400 text-sm mb-8">Enter your TokenTrim API Key to analyze your savings.</p>
@@ -175,7 +169,6 @@ export default function Home() {
              </div>
           </div>
 
-          {/* Right Input Area */}
           <div className="p-8 md:w-[55%] bg-[#060b14]/50 flex flex-col justify-center">
               <label className="block text-sm font-medium text-slate-400 mb-3">Your TokenTrim API Key</label>
               <div className="relative mb-5">
@@ -208,10 +201,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* BOTTOM SECTION: CHARTS & LOGS */}
+        {/* BOTTOM SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
           
-          {/* CSS Bar Chart */}
           <div className="bg-[#0b1221] border border-[#1e293b] rounded-xl p-6 shadow-lg">
              <div className="flex justify-between items-start mb-6">
                 <div>
@@ -220,13 +212,12 @@ export default function Home() {
                   <div className="text-xs text-slate-500">Total Estimated Savings</div>
                 </div>
                 <div className="text-right">
-                  <button className="bg-[#1e293b] text-xs px-3 py-1.5 rounded flex items-center gap-1 text-slate-300">Monthly <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
+                  <button onClick={() => handleAction('Filter')} className="bg-[#1e293b] text-xs px-3 py-1.5 rounded flex items-center gap-1 text-slate-300">Monthly <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg></button>
                   <div className="text-[#00e5b5] text-xs font-bold mt-4 px-2 py-1 bg-[#00e5b5]/10 inline-block rounded">↗ 50%</div>
                   <div className="text-[10px] text-slate-500 mt-1">vs last month</div>
                 </div>
              </div>
 
-             {/* The Actual CSS Graph Container */}
              <div className="h-40 flex items-end justify-between gap-2 mt-8 relative">
                <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-600 pointer-events-none">
                  <span>$200</span><span>$150</span><span>$100</span><span>$50</span><span>$0</span>
@@ -242,7 +233,6 @@ export default function Home() {
              </div>
           </div>
 
-          {/* Activity Log */}
           <div className="bg-[#0b1221] border border-[#1e293b] rounded-xl p-6 shadow-lg">
              <div className="flex justify-between items-center mb-6">
                <h3 className="text-white font-bold">Recent Activity</h3>
@@ -271,17 +261,6 @@ export default function Home() {
                  <div className="text-sm text-slate-500 text-center py-10">Enter API key to view logs</div>
                )}
              </div>
-          </div>
-        </div>
-
-        {/* FOOTER */}
-        <div className="py-8 border-t border-[#1e293b]/50 mt-4 flex flex-col items-center">
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-6 font-bold">Trusted by developers building with</p>
-          <div className="flex flex-wrap justify-center gap-8 opacity-60">
-             <div className="flex items-center gap-2 font-bold text-lg"><span className="text-2xl">🌸</span> OpenAI</div>
-             <div className="flex items-center gap-2 font-bold text-lg tracking-tight">ANTHROP\C</div>
-             <div className="flex items-center gap-2 font-bold text-lg"><span className="text-2xl">🦜🔗</span> LangChain</div>
-             <div className="flex items-center gap-2 font-bold text-lg"><span className="border-t-[10px] border-t-transparent border-b-[10px] border-b-white border-x-[10px] border-x-transparent w-0 h-0"></span> Vercel</div>
           </div>
         </div>
 
