@@ -1,15 +1,39 @@
 import type { Metadata } from "next";
+import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "700"],
+});
+
+const body = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+  weight: ["400", "500", "600"],
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "TokenTrim — Cut Your OpenAI Bills by 50%",
-  description: "The Edge-Deployed Semantic Cache for AI Agents.",
+  title: "TokenTrim — Cut your OpenAI bills by 50%",
+  description:
+    "Edge-deployed semantic caching and context pruning for AI agents.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body className="bg-[#030712] font-sans text-white antialiased">{children}</body>
+    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body className="bg-base text-white font-body antialiased">{children}</body>
     </html>
   );
 }
