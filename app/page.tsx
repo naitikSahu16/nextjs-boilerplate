@@ -40,11 +40,11 @@ export default function Home() {
       let realTokens = 0;
 
       if (dbResponse.result) {
-        // DB me data mil gaya
+        // Data found in database
         const userData = JSON.parse(dbResponse.result);
         realTokens = userData.saved_tokens || 0;
       } else if (key.trim() === "tt_founder_999") {
-        // 2. FOUNDER DEMO FALLBACK (Agar DB abhi khali hai)
+        // 2. FOUNDER DEMO FALLBACK (If DB is currently empty)
         realTokens = 138; 
       } else {
         throw new Error("Invalid Key");
@@ -58,12 +58,12 @@ export default function Home() {
         hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
       });
       
-      setIsUnlocked(true); // TALA KHUL GAYA!
+      setIsUnlocked(true); // SUCCESS! UNLOCK THE PADLOCK
 
     } catch (err) {
       // 3. NETWORK ERROR / WRONG KEY HANDLING
       if (key.trim() === "tt_founder_999") {
-         // Agar network block ho jaye toh bhi founder key chalni chahiye
+         // Founder key fallback for demo purposes
          let mockTokens = 138;
          setData({
            tokens: mockTokens,
@@ -74,7 +74,8 @@ export default function Home() {
          setIsUnlocked(true);
       } else {
          setIsUnlocked(false);
-         alert("❌ Invalid API Key! Access Denied. Tala band hi rahega.");
+         // PROFESSIONAL ENGLISH ERROR MESSAGE
+         alert("❌ Invalid API Key! Access Denied. Please check your key and try again.");
       }
     }
     
