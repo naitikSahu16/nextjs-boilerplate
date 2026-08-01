@@ -2,42 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-html { scroll-behavior: smooth; }
-body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-::selection { background-color: rgba(0,229,181,0.3); color: white; }
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
 
-@keyframes orb-drift-1 {
-  0%,100%{transform:translate(0,0) scale(1)}
-  33%{transform:translate(40px,-60px) scale(1.06)}
-  66%{transform:translate(-25px,25px) scale(0.94)}
+  .glow-cyan {
+    box-shadow: 0 0 50px -12px rgba(0, 229, 181, 0.4);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 28px rgba(0, 229, 181, 0.5);
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
 }
-@keyframes orb-drift-2 {
-  0%,100%{transform:translate(0,0) scale(1)}
-  33%{transform:translate(-50px,35px) scale(0.93)}
-  66%{transform:translate(30px,-40px) scale(1.08)}
-}
-@keyframes orb-drift-3 {
-  0%,100%{transform:translate(0,0) scale(1)}
-  50%{transform:translate(25px,45px) scale(1.04)}
-}
+
 @keyframes fade-up {
-  from{opacity:0;transform:translateY(24px)}
-  to{opacity:1;transform:translateY(0)}
-}
-@keyframes fade-up-sm {
-  from{opacity:0;transform:translateY(16px)}
-  to{opacity:1;transform:translateY(0)}
-}
-@keyframes shimmer {
-  0%{background-position:-200% 0}
-  100%{background-position:200% 0}
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.anim-fade-up { opacity:0; animation:fade-up .7s ease-out forwards; }
-.step-card { opacity:0; animation:fade-up .6s ease-out forwards; }
-.breakdown-enter { animation:fade-up-sm .5s ease-out forwards; }
-.skeleton-shimmer {
-  background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,0.04) 50%,transparent 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.8s ease-in-out infinite;
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
