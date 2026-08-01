@@ -3,14 +3,14 @@ import { useState } from "react";
 
 export default function Home() {
   const [key, setKey] = useState("");
-  const [savings, setSavings] = useState(null);
+  const [savings, setSavings] = useState("");
 
   const checkSavings = () => {
-    // Abhi MVP ke liye humari VIP key check kar rahe hain
-    if(key.trim() === "tt_founder_999") {
-       setSavings(138); 
+    // Check for our VIP key
+    if (key.trim() === "tt_founder_999") {
+       setSavings("138"); 
     } else {
-       setSavings(0);
+       setSavings("0");
     }
   }
 
@@ -40,7 +40,7 @@ export default function Home() {
             Check My Savings
           </button>
 
-          {savings !== null && (
+          {savings !== "" && (
             <div className="mt-8 p-6 bg-gray-950 rounded-xl border border-gray-800">
               <p className="text-gray-400 mb-2">Total Tokens Saved</p>
               <p className="text-6xl font-black text-emerald-400">{savings}</p>
