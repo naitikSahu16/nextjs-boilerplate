@@ -132,7 +132,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* NEW: SOCIAL PROOF / TRUST BADGES */}
+        {/* SOCIAL PROOF / TRUST BADGES */}
         <div className="w-full flex flex-col items-center justify-center gap-4 pt-2 pb-6 border-b border-slate-800/50">
           <p className="text-xs text-slate-500 font-semibold tracking-widest uppercase">Trusted by developers building with</p>
           <div className="flex flex-row items-center justify-center gap-8 md:gap-12 grayscale opacity-50 flex-wrap">
@@ -218,7 +218,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* NEW: HOW TO INTEGRATE (CODE SNIPPET) */}
+        {/* HOW TO INTEGRATE (CODE SNIPPET) */}
         <div id="docs" className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8 mt-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div>
@@ -231,9 +231,6 @@ export default function Home() {
           </div>
           
           <div className="bg-[#020614] rounded-lg p-4 md:p-6 font-mono text-xs md:text-sm overflow-x-auto border border-[#1e293b] relative group">
-            <button className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors" title="Copy code">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-            </button>
             <p className="text-slate-300"><span className="text-[#c678dd]">import</span> <span className="text-[#e5c07b]">OpenAI</span> <span className="text-[#c678dd]">from</span> <span className="text-[#98c379]">'openai'</span>;</p>
             <p className="mt-4 text-slate-300"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">openai</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">new</span> <span className="text-[#e5c07b]">OpenAI</span>({'{'}</p>
             <p className="ml-4 md:ml-8 text-slate-300">apiKey: <span className="text-[#98c379]">process.env.TOKENTRIM_API_KEY</span>,</p>
@@ -247,7 +244,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* NEW: PRICING SECTION */}
+        {/* PRICING SECTION */}
         <div id="pricing" className="w-full mt-4">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Simple, transparent pricing</h2>
@@ -296,7 +293,7 @@ export default function Home() {
 
       </div>
 
-      {/* NEW: FOOTER (LEGAL & LINKS) */}
+      {/* FOOTER (LEGAL & LINKS) */}
       <footer className="w-full max-w-[800px] mt-16 pt-8 pb-6 border-t border-slate-800/50">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div className="col-span-2 md:col-span-1">
@@ -321,10 +318,15 @@ export default function Home() {
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm">Connect</h4>
             <div className="flex gap-4">
-              {/* Twitter Icon */}
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-              </a>
-              {/* GitHub Icon */}
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-
+              <a href="#" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">𝕏 (Twitter)</a>
+              <a href="#" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">GitHub</a>
+            </div>
+          </div>
+        </div>
+        <div className="text-center text-slate-600 text-xs mt-8">
+          © {new Date().getFullYear()} TokenTrim. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  );
+}
