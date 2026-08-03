@@ -17,7 +17,6 @@ export default function Home() {
     hitRate: 0,
   });
 
-  // MAGIC: Jab tu asli me login karega, ye teri Founder Key auto-fill kar dega demo ke liye!
   useEffect(() => {
     if (isSignedIn) {
       setKey("tt_founder_999");
@@ -81,7 +80,7 @@ export default function Home() {
          setIsUnlocked(true);
       } else {
          setIsUnlocked(false);
-         alert("❌ Invalid API Key! Access Denied. Please check your key and try again.");
+         alert("❌ Invalid API Key! Access Denied.");
       }
     }
     
@@ -91,18 +90,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#020614] text-white font-sans py-6 px-4 flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden relative">
       
-      <div className="w-full max-w-[800px] flex flex-col gap-6">
+      <div className="w-full max-w-[800px] flex flex-col gap-8">
         
         {/* NAVBAR */}
-        <nav className="flex items-center justify-between w-full pb-4">
+        <nav className="flex items-center justify-between w-full pb-2">
           <div className="text-xl font-bold tracking-tight">TokenTrim</div>
           
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0b1120] border border-[#1e293b] text-xs font-medium text-slate-300">
-            <span className="text-[#f59e0b]">⚡</span> Edge-Deployed Cache
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+            <a href="#docs" className="hover:text-white transition-colors">Docs</a>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* ASLI CLERK AUTHENTICATION BUTTONS */}
             {!isSignedIn ? (
               <>
                 <SignInButton mode="modal">
@@ -123,18 +123,29 @@ export default function Home() {
         </nav>
 
         {/* HERO */}
-        <div className="text-center w-full py-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+        <div className="text-center w-full py-4 mt-4">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
             Cut your OpenAI bills by <span className="text-[#00e5b5]">50%.</span>
           </h1>
-          <p className="text-slate-400 text-sm md:text-base px-2">
-            Zero latency. Maximum savings. Built for AI Agents. Deployed at the edge.
+          <p className="text-slate-400 text-base md:text-lg px-2 max-w-2xl mx-auto">
+            Zero latency. Maximum savings. The smartest caching layer built specifically for AI Agents. Deployed at the edge.
           </p>
         </div>
 
-        {/* 1. API KEY MODULE */}
-        <div className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-4">Your TokenTrim API Key</label>
+        {/* NEW: SOCIAL PROOF / TRUST BADGES */}
+        <div className="w-full flex flex-col items-center justify-center gap-4 pt-2 pb-6 border-b border-slate-800/50">
+          <p className="text-xs text-slate-500 font-semibold tracking-widest uppercase">Trusted by developers building with</p>
+          <div className="flex flex-row items-center justify-center gap-8 md:gap-12 grayscale opacity-50 flex-wrap">
+            <span className="text-lg md:text-xl font-bold tracking-tighter">OpenAI</span>
+            <span className="text-lg md:text-xl font-bold tracking-tight">🦜🔗 LangChain</span>
+            <span className="text-lg md:text-xl font-serif font-bold italic">Anthropic</span>
+            <span className="text-lg md:text-xl font-bold tracking-tighter">NEXT.js</span>
+          </div>
+        </div>
+
+        {/* API KEY MODULE (DASHBOARD) */}
+        <div className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8 shadow-2xl">
+          <label className="block text-sm font-medium text-slate-300 mb-4">Test your TokenTrim API Key</label>
           
           <div className="flex flex-row items-center gap-3 w-full mb-5">
             <div className="relative flex-1">
@@ -147,7 +158,7 @@ export default function Home() {
                 placeholder="Enter API Key (e.g. tt_founder_999)" 
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 md:py-4 border border-[#1e293b] rounded-lg bg-[#040814] text-white placeholder-slate-600 focus:outline-none focus:border-[#00e5b5] transition-all text-sm"
+                className="block w-full pl-10 pr-3 py-3 md:py-4 border border-[#1e293b] rounded-lg bg-[#040814] text-white placeholder-slate-600 focus:outline-none focus:border-[#00e5b5] transition-all text-sm font-mono"
               />
             </div>
             
@@ -163,41 +174,18 @@ export default function Home() {
           <button 
             onClick={checkSavings}
             disabled={isAnalyzing}
-            className="w-full bg-[#00e5b5] text-black font-semibold py-3.5 md:py-4 rounded-lg transition-all flex justify-center items-center gap-2 hover:bg-[#00c090] disabled:opacity-50 text-base md:text-lg"
+            className="w-full bg-[#00e5b5] text-black font-bold py-3.5 md:py-4 rounded-lg transition-all flex justify-center items-center gap-2 hover:bg-[#00c090] disabled:opacity-50 text-base shadow-[0_0_20px_rgba(0,229,181,0.2)]"
           >
             {isAnalyzing ? "Analyzing Data..." : "Analyze My Savings ↗"}
           </button>
           
           <div className="mt-4 flex flex-row items-center justify-center gap-2 text-xs md:text-sm text-slate-500">
              <svg className="flex-none w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-             <span>Key never stored on servers.</span>
+             <span>Keys are fully encrypted and never stored in plain text.</span>
           </div>
         </div>
 
-        {/* 2. GET STARTED BANNER */}
-        <div 
-          onClick={handleGetStarted}
-          className="w-full bg-[#00e5b5] rounded-xl p-4 flex flex-row items-center justify-between cursor-pointer hover:opacity-95 transition-opacity relative overflow-hidden"
-        >
-           <div className="flex flex-row items-center gap-4 relative z-10">
-             <div className="flex-none w-10 h-10 md:w-12 md:h-12 rounded-full bg-black flex items-center justify-center text-white">
-               <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-             </div>
-             <span className="text-black font-medium text-base md:text-lg">Get Started</span>
-           </div>
-           
-           <div className="absolute top-0 right-0 bottom-0 w-1/2 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 50%, black 1px, transparent 1px)', backgroundSize: '8px 8px' }}></div>
-        </div>
-
-        {/* 3. HOW IT WORKS */}
-        <div className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-4 flex flex-row items-center justify-between cursor-pointer hover:bg-[#0f172a] transition-colors">
-          <div className="flex-none w-8 h-8 md:w-10 md:h-10 rounded-full border border-[#00e5b5] flex items-center justify-center">
-             <svg className="w-3 h-3 md:w-4 md:h-4 text-[#00e5b5] ml-1" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          </div>
-          <span className="text-slate-500 text-sm font-medium">How it works</span>
-        </div>
-
-        {/* 4. EXACT 2x2 STATS GRID */}
+        {/* EXACT 2x2 STATS GRID */}
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { label: "Total Savings", value: `$${data.savings.toFixed(2)}`, icon: "$", color: "text-[#00e5b5]" },
@@ -215,37 +203,128 @@ export default function Home() {
               color: "text-white" 
             }
           ].map((stat, i) => (
-            <div key={i} className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-6 flex flex-row items-start gap-4">
+            <div key={i} className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-6 flex flex-row items-start gap-4 hover:border-slate-700 transition-colors">
               <div className={`flex-none w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#040814] flex items-center justify-center font-bold text-lg md:text-xl ${stat.color}`}>
                 {typeof stat.icon === 'string' ? stat.icon : stat.icon}
               </div>
               <div className="flex flex-col">
-                <div className="text-xs md:text-sm text-slate-100 mb-1 font-medium">{stat.label}</div>
+                <div className="text-xs md:text-sm text-slate-400 mb-1 font-medium">{stat.label}</div>
                 <div className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">{stat.value}</div>
-                <div className="text-xs md:text-sm text-[#00e5b5]">↗ {i===0 ? '50%' : i===1 ? '12.4%' : i===2 ? '842K' : '18.6%'} <span className="text-[#00e5b5] font-normal">vs last month</span></div>
+                {data.tokens > 0 && (
+                  <div className="text-xs md:text-sm text-[#00e5b5]">↗ {i===0 ? '50%' : i===1 ? '12.4%' : i===2 ? '842K' : '18.6%'} <span className="text-slate-500 font-normal">vs last month</span></div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* 5. DEVELOPER DASHBOARD BOTTOM */}
-        <div className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Developer Dashboard</h2>
-          <p className="text-slate-400 text-sm mb-6">Enter your TokenTrim API Key to analyze your savings.</p>
+        {/* NEW: HOW TO INTEGRATE (CODE SNIPPET) */}
+        <div id="docs" className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8 mt-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Integrates in 1 line of code</h2>
+              <p className="text-slate-400 text-sm">Keep using the official OpenAI SDK. Just change the baseURL.</p>
+            </div>
+            <div className="bg-[#1e293b] text-white text-xs font-bold px-3 py-1.5 rounded-md self-start md:self-center">
+              Node.js
+            </div>
+          </div>
           
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-             {['Secure & Encrypted', 'Real-time Analytics', 'Edge Deployed'].map((feature, i) => (
-               <div key={i} className="w-full border border-[#1e293b] rounded-lg p-3 flex flex-row items-center gap-3 bg-[#040814]">
-                 <div className="flex-none w-5 h-5 rounded-full bg-[#00e5b5] flex items-center justify-center">
-                   <svg className="flex-none w-3 h-3 text-black" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                 </div>
-                 <span className="text-slate-200 text-xs md:text-sm font-medium">{feature}</span>
-               </div>
-             ))}
+          <div className="bg-[#020614] rounded-lg p-4 md:p-6 font-mono text-xs md:text-sm overflow-x-auto border border-[#1e293b] relative group">
+            <button className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors" title="Copy code">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            </button>
+            <p className="text-slate-300"><span className="text-[#c678dd]">import</span> <span className="text-[#e5c07b]">OpenAI</span> <span className="text-[#c678dd]">from</span> <span className="text-[#98c379]">'openai'</span>;</p>
+            <p className="mt-4 text-slate-300"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">openai</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">new</span> <span className="text-[#e5c07b]">OpenAI</span>({'{'}</p>
+            <p className="ml-4 md:ml-8 text-slate-300">apiKey: <span className="text-[#98c379]">process.env.TOKENTRIM_API_KEY</span>,</p>
+            <div className="bg-[#00e5b5]/10 -mx-4 md:-mx-6 px-4 md:px-6 py-1 border-l-2 border-[#00e5b5]">
+              <p className="ml-4 md:ml-8 text-white font-semibold">baseURL: <span className="text-[#98c379]">'https://tokentrim.com/v1'</span>, <span className="text-slate-500 font-normal"> // &lt;-- Just add this!</span></p>
+            </div>
+            <p className="text-slate-300">{'}'});</p>
+            
+            <p className="mt-4 text-slate-500">// Your code stays exactly the same</p>
+            <p className="text-slate-300"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">response</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">await</span> <span className="text-[#e5c07b]">openai.chat.completions.create</span>({'{'} ... {'}'});</p>
+          </div>
+        </div>
+
+        {/* NEW: PRICING SECTION */}
+        <div id="pricing" className="w-full mt-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Simple, transparent pricing</h2>
+            <p className="text-slate-400">Start for free, upgrade when you scale.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Free Tier */}
+            <div className="bg-[#0b1221] border border-[#1e293b] rounded-2xl p-6 md:p-8 flex flex-col">
+              <h3 className="text-xl font-bold text-white mb-2">Hobby</h3>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-4xl font-bold text-white">$0</span>
+                <span className="text-slate-400">/ forever</span>
+              </div>
+              <p className="text-slate-400 text-sm mb-6 flex-1">Perfect for indie hackers testing their AI agents.</p>
+              
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> 10,000 cached tokens / mo</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Basic Analytics</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Community Support</li>
+              </ul>
+              
+              <button className="w-full bg-[#1e293b] text-white font-bold py-3 rounded-xl hover:bg-slate-700 transition-colors">Start for free</button>
+            </div>
+            
+            {/* Pro Tier */}
+            <div className="bg-gradient-to-b from-[#0b1221] to-[#040814] border border-[#00e5b5]/50 rounded-2xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-[0_0_30px_rgba(0,229,181,0.1)]">
+              <div className="absolute top-0 right-0 bg-[#00e5b5] text-black text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
+              <h3 className="text-xl font-bold text-white mb-2">Pro</h3>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-4xl font-bold text-white">$5</span>
+                <span className="text-slate-400">/ month</span>
+              </div>
+              <p className="text-slate-400 text-sm mb-6 flex-1">For production apps that need maximum savings.</p>
+              
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> <span className="font-bold text-white">Unlimited</span> cached tokens</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Advanced Dashboard & API</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Priority Email Support</li>
+              </ul>
+              
+              <button className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-colors">Upgrade to Pro</button>
+            </div>
           </div>
         </div>
 
       </div>
-    </div>
-  );
-      }
+
+      {/* NEW: FOOTER (LEGAL & LINKS) */}
+      <footer className="w-full max-w-[800px] mt-16 pt-8 pb-6 border-t border-slate-800/50">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="col-span-2 md:col-span-1">
+            <div className="text-lg font-bold text-white mb-3">TokenTrim</div>
+            <p className="text-slate-500 text-xs">Making AI generation fast and affordable for developers worldwide.</p>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3 text-sm">Product</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><a href="#features" className="hover:text-[#00e5b5] transition-colors">Features</a></li>
+              <li><a href="#pricing" className="hover:text-[#00e5b5] transition-colors">Pricing</a></li>
+              <li><a href="#docs" className="hover:text-[#00e5b5] transition-colors">Documentation</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3 text-sm">Legal</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><a href="#" className="hover:text-[#00e5b5] transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-[#00e5b5] transition-colors">Terms of Service</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3 text-sm">Connect</h4>
+            <div className="flex gap-4">
+              {/* Twitter Icon */}
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+              </a>
+              {/* GitHub Icon */}
+              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-
