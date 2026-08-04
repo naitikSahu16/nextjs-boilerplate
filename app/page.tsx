@@ -4,12 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Home() {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn } = useUser();
   const [key, setKey] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false); 
   const inputRef = useRef(null);
   
+  // NEW: Tabs & Copy States for the Pro Feel
+  const [activeTab, setActiveTab] = useState("node");
+  const [copied, setCopied] = useState(false);
+
   const [data, setData] = useState({
     tokens: 0,
     savings: 0,
@@ -27,10 +31,10 @@ export default function Home() {
     }
   }, [isSignedIn]);
 
-  const handleGetStarted = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const checkSavings = async () => {
@@ -49,7 +53,6 @@ export default function Home() {
       const dbResponse = await res.json();
       
       let realTokens = 0;
-
       if (dbResponse.result) {
         const userData = JSON.parse(dbResponse.result);
         realTokens = userData.saved_tokens || 0;
@@ -65,7 +68,6 @@ export default function Home() {
         requests: Math.ceil(realTokens / 45),
         hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
       });
-      
       setIsUnlocked(true); 
 
     } catch (err) {
@@ -83,36 +85,40 @@ export default function Home() {
          alert("❌ Invalid API Key! Access Denied.");
       }
     }
-    
     setIsAnalyzing(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#020614] text-white font-sans py-6 px-4 flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#050505] text-slate-300 font-sans py-4 px-4 flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden">
       
-      <div className="w-full max-w-[800px] flex flex-col gap-8">
+      <div className="w-full max-w-[900px] flex flex-col gap-10 md:gap-16 mt-4">
         
-        {/* NAVBAR */}
-        <nav className="flex items-center justify-between w-full pb-2">
-          <div className="text-xl font-bold tracking-tight">TokenTrim</div>
+        {/* PREMIUM NAVBAR */}
+        <nav className="flex items-center justify-between w-full py-2 bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50 border-b border-[#1a1a1a]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5b5] to-[#008f71] flex items-center justify-center shadow-[0_0_15px_rgba(0,229,181,0.4)]">
+              <span className="text-black font-bold text-lg">T</span>
+            </div>
+            <div className="text-xl font-bold tracking-tight text-white">TokenTrim</div>
+          </div>
           
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#benchmarks" className="hover:text-white transition-colors">Benchmarks</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-            <a href="#docs" className="hover:text-white transition-colors">Docs</a>
           </div>
 
           <div className="flex items-center gap-4">
             {!isSignedIn ? (
               <>
                 <SignInButton mode="modal">
-                  <button className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden sm:block">
+                  <button className="text-sm font-medium hover:text-white transition-colors hidden sm:block">
                     Sign in
                   </button>
                 </SignInButton>
                 <SignInButton mode="modal">
-                  <button className="bg-[#00e5b5] text-black text-sm font-bold py-1.5 px-4 rounded-lg hover:bg-[#00c090] transition-all shadow-[0_0_15px_rgba(0,229,181,0.15)]">
-                    Get API Key
+                  <button className="bg-[#00e5b5] text-black text-sm font-bold py-2 px-5 rounded-md hover:bg-[#00c090] transition-all shadow-[0_0_15px_rgba(0,229,181,0.2)]">
+                    Install Now
                   </button>
                 </SignInButton>
               </>
@@ -122,209 +128,266 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* HERO */}
-        <div className="text-center w-full py-4 mt-4">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            Cut your OpenAI bills by <span className="text-[#00e5b5]">50%.</span>
-          </h1>
-          <p className="text-slate-400 text-base md:text-lg px-2 max-w-2xl mx-auto">
-            Zero latency. Maximum savings. The smartest caching layer built specifically for AI Agents. Deployed at the edge.
-          </p>
-        </div>
+        {/* HERO SECTION (RTK VIBE) */}
+        <div className="text-center w-full pt-8 pb-4 flex flex-col items-center relative">
+          {/* Glowing Background Blur */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#00e5b5] opacity-[0.07] blur-[100px] pointer-events-none rounded-full"></div>
 
-        {/* SOCIAL PROOF / TRUST BADGES */}
-        <div className="w-full flex flex-col items-center justify-center gap-4 pt-2 pb-6 border-b border-slate-800/50">
-          <p className="text-xs text-slate-500 font-semibold tracking-widest uppercase">Trusted by developers building with</p>
-          <div className="flex flex-row items-center justify-center gap-8 md:gap-12 grayscale opacity-50 flex-wrap">
-            <span className="text-lg md:text-xl font-bold tracking-tighter">OpenAI</span>
-            <span className="text-lg md:text-xl font-bold tracking-tight">🦜🔗 LangChain</span>
-            <span className="text-lg md:text-xl font-serif font-bold italic">Anthropic</span>
-            <span className="text-lg md:text-xl font-bold tracking-tighter">NEXT.js</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#111] border border-[#222] text-xs font-medium text-slate-300 mb-8 cursor-pointer hover:border-[#333] transition-colors">
+            <span className="w-2 h-2 rounded-full bg-[#00e5b5] animate-pulse"></span>
+            Edge Caching is now live. <span className="text-[#00e5b5]">Read the docs →</span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6 leading-[1.1]">
+            Your AI agent is wasting tokens.<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00e5b5] to-[#008f71]">
+              Fix it with TokenTrim.
+            </span>
+          </h1>
+          
+          <p className="text-slate-400 text-lg md:text-xl px-2 max-w-2xl mx-auto mb-10 leading-relaxed">
+            TokenTrim intercepts your LLM requests, caches redundant outputs at the edge, and slashes your OpenAI bills by up to 50%. <strong className="text-white">Zero latency. Zero config changes.</strong>
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+             <SignInButton mode="modal">
+                <button className="w-full sm:w-auto bg-[#00e5b5] text-black font-bold py-3.5 px-8 rounded-lg hover:bg-[#00c090] transition-all flex items-center justify-center gap-2 text-base shadow-[0_0_20px_rgba(0,229,181,0.2)] hover:shadow-[0_0_30px_rgba(0,229,181,0.4)] hover:-translate-y-0.5 duration-200">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  Install TokenTrim
+                </button>
+             </SignInButton>
+             <button className="w-full sm:w-auto bg-[#111] text-white border border-[#333] font-semibold py-3.5 px-8 rounded-lg hover:bg-[#1a1a1a] transition-all flex items-center justify-center gap-2 text-base hover:-translate-y-0.5 duration-200">
+               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+               Star on GitHub
+             </button>
           </div>
         </div>
 
-        {/* API KEY MODULE (DASHBOARD) */}
-        <div className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8 shadow-2xl">
-          <label className="block text-sm font-medium text-slate-300 mb-4">Test your TokenTrim API Key</label>
+        {/* NEW: THE FAKE TERMINAL (REPLACES BORING INPUT) */}
+        <div className="w-full max-w-3xl mx-auto rounded-xl overflow-hidden bg-[#0c0c0c] border border-[#222] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {/* Terminal Header */}
+          <div className="flex items-center px-4 py-3 bg-[#111] border-b border-[#222]">
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+              <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+            </div>
+            <div className="mx-auto flex items-center gap-2 text-xs text-slate-500 font-mono">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+              bash - tokentrim status
+            </div>
+          </div>
           
-          <div className="flex flex-row items-center gap-3 w-full mb-5">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="flex-none w-5 h-5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-              </div>
-              <input 
-                ref={inputRef}
-                type="text" 
-                placeholder="Enter API Key (e.g. tt_founder_999)" 
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 md:py-4 border border-[#1e293b] rounded-lg bg-[#040814] text-white placeholder-slate-600 focus:outline-none focus:border-[#00e5b5] transition-all text-sm font-mono"
-              />
+          {/* Terminal Body */}
+          <div className="p-5 md:p-8 font-mono text-sm">
+            <div className="text-slate-400 mb-4">
+               $ echo "Enter your TokenTrim API Key to run analytics..."
             </div>
             
-            <div className={`flex-none w-6 h-6 transition-colors duration-500 ${isUnlocked ? 'text-[#00e5b5]' : 'text-slate-400'}`}>
-              {isUnlocked ? (
-                <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+            <div className="flex flex-row items-center gap-2 w-full mb-6">
+              <span className="text-[#00e5b5] font-bold">~ $</span>
+              <input 
+                type="text" 
+                placeholder="tt_founder_999" 
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                className="flex-1 bg-transparent border-none text-white outline-none placeholder-slate-700 font-mono"
+              />
+            </div>
+
+            <button 
+              onClick={checkSavings}
+              disabled={isAnalyzing}
+              className="px-4 py-2 bg-[#1a1a1a] text-white border border-[#333] rounded hover:bg-[#222] transition-colors disabled:opacity-50 text-xs tracking-wider uppercase font-bold"
+            >
+              {isAnalyzing ? "RUNNING SCRIPT..." : "./RUN_ANALYTICS.SH"}
+            </button>
+
+            {/* Terminal Output */}
+            {isUnlocked && (
+              <div className="mt-8 pt-6 border-t border-dashed border-[#333] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                 <div className="text-[#00e5b5] mb-2 font-bold">SUCCESS! Data retrieved from edge network.</div>
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Total Savings</div>
+                      <div className="text-white text-xl font-bold">${data.savings.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Cache Hit Rate</div>
+                      <div className="text-[#f59e0b] text-xl font-bold">{data.hitRate}%</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Tokens Saved</div>
+                      <div className="text-white text-xl font-bold">{data.tokens > 1000 ? `${(data.tokens/1000).toFixed(1)}K` : data.tokens}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500 text-xs mb-1">Total Requests</div>
+                      <div className="text-white text-xl font-bold">{data.requests.toLocaleString()}</div>
+                    </div>
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* THE PROBLEM (BENTO BOX GRID) */}
+        <div id="features" className="w-full mt-8">
+           <h2 className="text-xs font-semibold text-[#00e5b5] tracking-widest uppercase mb-2">// 01 - THE PROBLEM</h2>
+           <h3 className="text-3xl font-bold text-white mb-8">Why your API bills are exploding.</h3>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Box 1 */}
+              <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 md:p-8 hover:border-[#333] transition-colors group">
+                 <div className="w-10 h-10 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6 group-hover:bg-[#1a1a1a] transition-colors">
+                   <svg className="w-5 h-5 text-[#f59e0b]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                 </div>
+                 <h4 className="text-xl font-bold text-white mb-3">Redundant Requests</h4>
+                 <p className="text-slate-400 text-sm leading-relaxed">Your AI agents ask the exact same questions repeatedly. You pay for every single identical request sent to OpenAI.</p>
+              </div>
+              
+              {/* Box 2 */}
+              <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 md:p-8 hover:border-[#333] transition-colors group">
+                 <div className="w-10 h-10 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6 group-hover:bg-[#1a1a1a] transition-colors">
+                   <svg className="w-5 h-5 text-[#ef4444]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                 </div>
+                 <h4 className="text-xl font-bold text-white mb-3">Latency Bottlenecks</h4>
+                 <p className="text-slate-400 text-sm leading-relaxed">Waiting 3 seconds for OpenAI to generate an answer you already generated yesterday kills your user experience.</p>
+              </div>
+           </div>
+        </div>
+
+        {/* TABBED CODE BLOCK (RTK STYLE) */}
+        <div id="docs" className="w-full mt-10">
+          <h2 className="text-xs font-semibold text-[#00e5b5] tracking-widest uppercase mb-2">// 02 - GET STARTED</h2>
+          <h3 className="text-3xl font-bold text-white mb-8">Integrate in 30 seconds.</h3>
+          
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+            {/* Tabs Header */}
+            <div className="flex flex-row border-b border-[#1a1a1a] bg-[#050505]">
+               <button 
+                 onClick={() => setActiveTab('node')} 
+                 className={`flex-1 py-4 text-sm font-semibold transition-colors ${activeTab === 'node' ? 'text-[#00e5b5] border-b-2 border-[#00e5b5]' : 'text-slate-500 hover:text-slate-300'}`}
+               >
+                 Node.js / TS
+               </button>
+               <button 
+                 onClick={() => setActiveTab('python')} 
+                 className={`flex-1 py-4 text-sm font-semibold transition-colors ${activeTab === 'python' ? 'text-[#00e5b5] border-b-2 border-[#00e5b5]' : 'text-slate-500 hover:text-slate-300'}`}
+               >
+                 Python
+               </button>
+            </div>
+            
+            {/* Code Content */}
+            <div className="p-6 md:p-8 font-mono text-sm relative group bg-[#0c0c0c]">
+              <button 
+                onClick={() => handleCopy(activeTab === 'node' ? "baseURL: 'https://tokentrim.com/v1'" : "base_url='https://tokentrim.com/v1'")}
+                className="absolute top-6 right-6 p-2 rounded-md bg-[#1a1a1a] border border-[#333] text-slate-400 hover:text-white hover:bg-[#222] transition-all"
+                title="Copy to clipboard"
+              >
+                {copied ? (
+                   <svg className="w-4 h-4 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                ) : (
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                )}
+              </button>
+
+              {activeTab === 'node' ? (
+                <>
+                  <p className="text-slate-400 mb-4">// Just change the baseURL. Zero other changes required.</p>
+                  <p><span className="text-[#c678dd]">import</span> <span className="text-[#e5c07b]">OpenAI</span> <span className="text-[#c678dd]">from</span> <span className="text-[#98c379]">'openai'</span>;</p>
+                  <p className="mt-4"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">openai</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">new</span> <span className="text-[#e5c07b]">OpenAI</span>({'{'}</p>
+                  <p className="ml-4 md:ml-8">apiKey: <span className="text-[#98c379]">process.env.OPENAI_API_KEY</span>,</p>
+                  <div className="bg-[#00e5b5]/10 -mx-6 md:-mx-8 px-6 md:px-8 py-1.5 border-l-2 border-[#00e5b5] my-1">
+                    <p className="ml-4 md:ml-8 text-white font-semibold">baseURL: <span className="text-[#98c379]">'https://tokentrim.com/v1'</span>, <span className="text-slate-500 font-normal"> // &lt;- Add this</span></p>
+                  </div>
+                  <p className="ml-4 md:ml-8">defaultHeaders: {'{'} <span className="text-[#98c379]">'Authorization'</span>: <span className="text-[#98c379]">'Bearer '</span> <span className="text-[#56b6c2]">+</span> <span className="text-[#98c379]">process.env.TOKENTRIM_KEY</span> {'}'}</p>
+                  <p>{'}'});</p>
+                </>
               ) : (
-                <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <>
+                  <p className="text-slate-400 mb-4"># Just change the base_url. Zero other changes required.</p>
+                  <p><span className="text-[#c678dd]">from</span> <span className="text-[#e5c07b]">openai</span> <span className="text-[#c678dd]">import</span> <span className="text-[#e5c07b]">OpenAI</span></p>
+                  <p className="mt-4"><span className="text-[#e5c07b]">client</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#e5c07b]">OpenAI</span>(</p>
+                  <p className="ml-4 md:ml-8">api_key<span className="text-[#56b6c2]">=</span><span className="text-[#98c379]">"your-openai-key"</span>,</p>
+                  <div className="bg-[#00e5b5]/10 -mx-6 md:-mx-8 px-6 md:px-8 py-1.5 border-l-2 border-[#00e5b5] my-1">
+                    <p className="ml-4 md:ml-8 text-white font-semibold">base_url<span className="text-[#56b6c2]">=</span><span className="text-[#98c379]" >"https://tokentrim.com/v1"</span>, <span className="text-slate-500 font-normal"> # &lt;- Add this</span></p>
+                  </div>
+                  <p className="ml-4 md:ml-8">default_headers<span className="text-[#56b6c2]">=</span>{'{'}<span className="text-[#98c379]">"Authorization"</span>: <span className="text-[#98c379]">f"Bearer {'{'}TOKENTRIM_KEY{'}'}"</span>{'}'}</p>
+                  <p>)</p>
+                </>
               )}
             </div>
           </div>
-
-          <button 
-            onClick={checkSavings}
-            disabled={isAnalyzing}
-            className="w-full bg-[#00e5b5] text-black font-bold py-3.5 md:py-4 rounded-lg transition-all flex justify-center items-center gap-2 hover:bg-[#00c090] disabled:opacity-50 text-base shadow-[0_0_20px_rgba(0,229,181,0.2)]"
-          >
-            {isAnalyzing ? "Analyzing Data..." : "Analyze My Savings ↗"}
-          </button>
-          
-          <div className="mt-4 flex flex-row items-center justify-center gap-2 text-xs md:text-sm text-slate-500">
-             <svg className="flex-none w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-             <span>Keys are fully encrypted and never stored in plain text.</span>
-          </div>
         </div>
 
-        {/* EXACT 2x2 STATS GRID */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { label: "Total Savings", value: `$${data.savings.toFixed(2)}`, icon: "$", color: "text-[#00e5b5]" },
-            { label: "Cache Hit Rate", value: `${data.hitRate}%`, icon: "⚡", color: "text-[#f59e0b]" },
-            { 
-              label: "Tokens Saved", 
-              value: data.tokens > 1000 ? `${(data.tokens/1000).toFixed(1)}K` : data.tokens, 
-              icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>, 
-              color: "text-white" 
-            },
-            { 
-              label: "Total Requests", 
-              value: data.requests.toLocaleString(), 
-              icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>, 
-              color: "text-white" 
-            }
-          ].map((stat, i) => (
-            <div key={i} className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-6 flex flex-row items-start gap-4 hover:border-slate-700 transition-colors">
-              <div className={`flex-none w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#040814] flex items-center justify-center font-bold text-lg md:text-xl ${stat.color}`}>
-                {typeof stat.icon === 'string' ? stat.icon : stat.icon}
-              </div>
-              <div className="flex flex-col">
-                <div className="text-xs md:text-sm text-slate-400 mb-1 font-medium">{stat.label}</div>
-                <div className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">{stat.value}</div>
-                {data.tokens > 0 && (
-                  <div className="text-xs md:text-sm text-[#00e5b5]">↗ {i===0 ? '50%' : i===1 ? '12.4%' : i===2 ? '842K' : '18.6%'} <span className="text-slate-500 font-normal">vs last month</span></div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* HOW TO INTEGRATE (CODE SNIPPET) */}
-        <div id="docs" className="w-full bg-[#0b1221] border border-[#1e293b] rounded-xl p-5 md:p-8 mt-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Integrates in 1 line of code</h2>
-              <p className="text-slate-400 text-sm">Keep using the official OpenAI SDK. Just change the baseURL.</p>
-            </div>
-            <div className="bg-[#1e293b] text-white text-xs font-bold px-3 py-1.5 rounded-md self-start md:self-center">
-              Node.js
-            </div>
+                {/* PRICING (DARK THEME) */}
+        <div id="pricing" className="w-full mt-10">
+          <div className="text-center mb-10">
+            <h2 className="text-xs font-semibold text-[#00e5b5] tracking-widest uppercase mb-2">// 03 - PRICING</h2>
+            <h3 className="text-3xl font-bold text-white mb-3">Pay for what you save.</h3>
           </div>
           
-          <div className="bg-[#020614] rounded-lg p-4 md:p-6 font-mono text-xs md:text-sm overflow-x-auto border border-[#1e293b] relative group">
-            <p className="text-slate-300"><span className="text-[#c678dd]">import</span> <span className="text-[#e5c07b]">OpenAI</span> <span className="text-[#c678dd]">from</span> <span className="text-[#98c379]">'openai'</span>;</p>
-            <p className="mt-4 text-slate-300"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">openai</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">new</span> <span className="text-[#e5c07b]">OpenAI</span>({'{'}</p>
-            <p className="ml-4 md:ml-8 text-slate-300">apiKey: <span className="text-[#98c379]">process.env.TOKENTRIM_API_KEY</span>,</p>
-            <div className="bg-[#00e5b5]/10 -mx-4 md:-mx-6 px-4 md:px-6 py-1 border-l-2 border-[#00e5b5]">
-              <p className="ml-4 md:ml-8 text-white font-semibold">baseURL: <span className="text-[#98c379]">'https://tokentrim.com/v1'</span>, <span className="text-slate-500 font-normal"> // &lt;-- Just add this!</span></p>
-            </div>
-            <p className="text-slate-300">{'}'});</p>
-            
-            <p className="mt-4 text-slate-500">// Your code stays exactly the same</p>
-            <p className="text-slate-300"><span className="text-[#c678dd]">const</span> <span className="text-[#e5c07b]">response</span> <span className="text-[#56b6c2]">=</span> <span className="text-[#c678dd]">await</span> <span className="text-[#e5c07b]">openai.chat.completions.create</span>({'{'} ... {'}'});</p>
-          </div>
-        </div>
-
-        {/* PRICING SECTION */}
-        <div id="pricing" className="w-full mt-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Simple, transparent pricing</h2>
-            <p className="text-slate-400">Start for free, upgrade when you scale.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Free Tier */}
-            <div className="bg-[#0b1221] border border-[#1e293b] rounded-2xl p-6 md:p-8 flex flex-col">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-8 flex flex-col">
               <h3 className="text-xl font-bold text-white mb-2">Hobby</h3>
-              <div className="flex items-baseline gap-2 mb-4">
+              <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-4xl font-bold text-white">$0</span>
-                <span className="text-slate-400">/ forever</span>
+                <span className="text-slate-500">/ forever</span>
               </div>
-              <p className="text-slate-400 text-sm mb-6 flex-1">Perfect for indie hackers testing their AI agents.</p>
-              
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> 10,000 cached tokens / mo</li>
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Basic Analytics</li>
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Community Support</li>
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#333]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> 10,000 cached requests / mo</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#333]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Standard Edge Latency</li>
               </ul>
-              
-              <button className="w-full bg-[#1e293b] text-white font-bold py-3 rounded-xl hover:bg-slate-700 transition-colors">Start for free</button>
+              <button className="w-full bg-[#111] border border-[#222] text-white font-bold py-3 rounded-xl hover:bg-[#1a1a1a] transition-colors">Start for free</button>
             </div>
             
-            {/* Pro Tier */}
-            <div className="bg-gradient-to-b from-[#0b1221] to-[#040814] border border-[#00e5b5]/50 rounded-2xl p-6 md:p-8 flex flex-col relative overflow-hidden shadow-[0_0_30px_rgba(0,229,181,0.1)]">
-              <div className="absolute top-0 right-0 bg-[#00e5b5] text-black text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
-              <h3 className="text-xl font-bold text-white mb-2">Pro</h3>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-4xl font-bold text-white">$5</span>
-                <span className="text-slate-400">/ month</span>
+            <div className="bg-[#0c1210] border border-[#00e5b5]/30 rounded-2xl p-8 flex flex-col relative shadow-[0_0_40px_rgba(0,229,181,0.05)]">
+              <div className="absolute top-0 right-0 bg-[#00e5b5] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">PRO</div>
+              <h3 className="text-xl font-bold text-white mb-2">Enterprise</h3>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl font-bold text-white">$19</span>
+                <span className="text-slate-500">/ month</span>
               </div>
-              <p className="text-slate-400 text-sm mb-6 flex-1">For production apps that need maximum savings.</p>
-              
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> <span className="font-bold text-white">Unlimited</span> cached tokens</li>
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Advanced Dashboard & API</li>
-                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Priority Email Support</li>
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> <span className="text-white font-bold">Unlimited</span> cached requests</li>
+                <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Priority Global Edge Network</li>
               </ul>
-              
-              <button className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-colors">Upgrade to Pro</button>
+              <button className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-colors">Go Pro</button>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* FOOTER (LEGAL & LINKS) */}
-      <footer className="w-full max-w-[800px] mt-16 pt-8 pb-6 border-t border-slate-800/50">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+      {/* FOOTER */}
+      <footer className="w-full mt-24 pt-10 pb-8 border-t border-[#111] bg-[#020202]">
+        <div className="max-w-[900px] w-full mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 px-4 mb-10">
           <div className="col-span-2 md:col-span-1">
             <div className="text-lg font-bold text-white mb-3">TokenTrim</div>
-            <p className="text-slate-500 text-xs">Making AI generation fast and affordable for developers worldwide.</p>
+            <p className="text-slate-500 text-xs">Built for the next generation of AI agents.</p>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm">Product</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#features" className="hover:text-[#00e5b5] transition-colors">Features</a></li>
-              <li><a href="#pricing" className="hover:text-[#00e5b5] transition-colors">Pricing</a></li>
-              <li><a href="#docs" className="hover:text-[#00e5b5] transition-colors">Documentation</a></li>
+            <ul className="space-y-2 text-sm text-slate-500">
+              <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm">Legal</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-[#00e5b5] transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-[#00e5b5] transition-colors">Terms of Service</a></li>
+            <ul className="space-y-2 text-sm text-slate-500">
+              <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm">Connect</h4>
+            <h4 className="text-white font-semibold mb-3 text-sm">Links</h4>
             <div className="flex gap-4">
-              <a href="#" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">𝕏 (Twitter)</a>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">GitHub</a>
+              <a href="#" className="text-slate-500 hover:text-white transition-colors text-sm font-medium">GitHub</a>
+              <a href="#" className="text-slate-500 hover:text-white transition-colors text-sm font-medium">Twitter</a>
             </div>
           </div>
-        </div>
-        <div className="text-center text-slate-600 text-xs mt-8">
-          © {new Date().getFullYear()} TokenTrim. All rights reserved.
         </div>
       </footer>
     </div>
