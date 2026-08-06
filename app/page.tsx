@@ -1,6 +1,6 @@
 // @ts-nocheck
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 
@@ -9,16 +9,17 @@ export default function Home() {
   const [key, setKey] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false); 
+  const [isGenerating, setIsGenerating] = useState(false);
   
   const [activeTab, setActiveTab] = useState("node");
   const [copied, setCopied] = useState(false);
 
   const [data, setData] = useState({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
 
+  // Reset state when user logs out. 
+  // Removed the hardcoded tt_founder_999 key.
   useEffect(() => {
-    if (isSignedIn) {
-      setKey("tt_founder_999");
-    } else {
+    if (!isSignedIn) {
       setKey("");
       setData({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
       setIsUnlocked(false);
@@ -32,11 +33,30 @@ export default function Home() {
   };
 
   const handleProClick = () => {
-    alert("🚀 Stripe Checkout Page will open here! (Payment gateway integration pending in next step)");
+    alert("🚀 Stripe Checkout Page will open here! (Payment gateway integration pending)");
   };
 
   const scrollToTerminal = () => {
     document.getElementById("terminal-dashboard")?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Function to call our new API route and generate a real key
+  const generateRealKey = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/generate", { method: "POST" });
+      const responseData = await res.json();
+      
+      if (responseData.apiKey) {
+        setKey(responseData.apiKey);
+        alert("Success! Your live API key is generated and stored in the Edge network.");
+      } else {
+        alert("Failed to generate key. Please try again.");
+      }
+    } catch (error) {
+      alert("Error connecting to server.");
+    }
+    setIsGenerating(false);
   };
 
   const checkSavings = async () => {
@@ -45,8 +65,9 @@ export default function Home() {
     setIsUnlocked(false); 
 
     try {
-      const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/user:${key.trim()}`, {
-        headers: { Authorization: "Bearer gQAAAAAAAk1AAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw" }
+      // Connects directly to Upstash to verify key and fetch savings
+      const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/key:${key.trim()}`, {
+        headers: { Authorization: "Bearer gQAAAAAAAkIAAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw" }
       });
       const dbResponse = await res.json();
       
@@ -55,7 +76,7 @@ export default function Home() {
         const userData = JSON.parse(dbResponse.result);
         realTokens = userData.saved_tokens || 0;
       } else if (key.trim() === "tt_founder_999") {
-        realTokens = 138; 
+        realTokens = 138; // Fallback for the dummy key testing
       } else {
         throw new Error("Invalid Key");
       }
@@ -89,7 +110,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden">
       
-      {/* PREMIUM NAVBAR */}
+      {/* Navigation Bar */}
       <nav className="flex items-center justify-between w-full max-w-[1100px] px-6 py-4 bg-[#050505]/90 backdrop-blur-md sticky top-0 z-50 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5b5] to-[#008f71] flex items-center justify-center shadow-[0_0_15px_rgba(0,229,181,0.4)]">
@@ -126,11 +147,10 @@ export default function Home() {
 
       <div className="w-full max-w-[1000px] px-4 flex flex-col gap-16 md:gap-24 mt-10">
         
-        {/* HERO SECTION */}
+        {/* Hero Section */}
         <div className="text-center w-full pt-12 pb-8 flex flex-col items-center relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#00e5b5] opacity-[0.05] blur-[120px] pointer-events-none rounded-full"></div>
 
-          {/* UPDATED: HERO BADGE WITH "Read Docs" */}
           <Link href="/docs" className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0a0a0a] border border-[#222] text-xs font-semibold text-slate-300 mb-8 cursor-pointer hover:border-[#00e5b5]/50 transition-colors shadow-lg group">
             <span className="w-2 h-2 rounded-full bg-[#00e5b5] animate-pulse"></span>
             <span className="hidden sm:inline">Open Source • Apache 2.0 • Edge Native</span>
@@ -169,7 +189,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* TERMINAL DASHBOARD */}
+        {/* Terminal Dashboard Block */}
         <div id="terminal-dashboard" className="w-full rounded-xl overflow-hidden bg-[#0c0c0c] border border-[#222] shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
           <div className="flex items-center px-4 py-3 bg-[#111] border-b border-[#222]">
             <div className="flex gap-2">
@@ -179,19 +199,31 @@ export default function Home() {
             </div>
             <div className="mx-auto flex items-center gap-2 text-xs text-slate-500 font-mono">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
-              Terminal
+              Developer Dashboard
             </div>
           </div>
           <div className="p-6 md:p-10 font-mono text-sm">
             <div className="text-[#00e5b5] font-bold mb-4 flex items-center gap-2">
               <span className="w-2 h-2 bg-[#00e5b5] rounded-full inline-block"></span> 
-              $ tokentrim gain
+              $ tokentrim status
             </div>
             
-            <div className="flex flex-row items-center gap-3 w-full mb-8 max-w-md">
-              <span className="text-slate-500 font-bold">API_KEY=</span>
-              <input type="text" placeholder="Enter key (e.g. tt_founder_999)" value={key} onChange={(e) => setKey(e.target.value)} className="flex-1 bg-[#111] border border-[#333] rounded px-3 py-1.5 text-white outline-none placeholder-slate-700 font-mono focus:border-[#00e5b5]"/>
-            </div>
+            {isSignedIn && !key ? (
+              // Show Generate Button if user is logged in but has no key generated in this session
+              <div className="mb-8 p-6 border border-[#222] bg-[#111] rounded-lg">
+                 <h4 className="text-white font-bold mb-2">Welcome to TokenTrim!</h4>
+                 <p className="text-slate-400 mb-4 text-xs">Generate your unique API key to connect your AI agents to our Edge network.</p>
+                 <button onClick={generateRealKey} disabled={isGenerating} className="px-6 py-2.5 bg-[#00e5b5] text-black rounded hover:bg-[#00c090] transition-colors disabled:opacity-50 text-xs tracking-wider uppercase font-bold cursor-pointer">
+                   {isGenerating ? "PROVISIONING SERVER..." : "+ GENERATE LIVE API KEY"}
+                 </button>
+              </div>
+            ) : (
+              // Standard Input Field
+              <div className="flex flex-row items-center gap-3 w-full mb-8 max-w-md">
+                <span className="text-slate-500 font-bold">API_KEY=</span>
+                <input type="text" placeholder="Sign in to generate key" value={key} onChange={(e) => setKey(e.target.value)} className="flex-1 bg-[#111] border border-[#333] rounded px-3 py-1.5 text-white outline-none placeholder-slate-700 font-mono focus:border-[#00e5b5]"/>
+              </div>
+            )}
 
             <button onClick={checkSavings} disabled={isAnalyzing} className="px-6 py-2 bg-[#1a1a1a] text-white border border-[#333] rounded hover:bg-[#222] transition-colors disabled:opacity-50 text-xs tracking-wider uppercase font-bold cursor-pointer mb-6">
               {isAnalyzing ? "Fetching from Edge..." : "Run Analysis"}
@@ -226,7 +258,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 01 - THE PROBLEM */}
+        {/* Feature Grid Block */}
         <div id="problem" className="w-full">
            <h2 className="text-xs font-semibold text-slate-500 tracking-widest uppercase mb-4">// 01 - THE PROBLEM</h2>
            <h3 className="text-3xl md:text-4xl font-bold text-white mb-10">The problem with AI coding today</h3>
@@ -264,7 +296,7 @@ export default function Home() {
            </div>
         </div>
 
-        {/* 02 - SEE THE DIFFERENCE */}
+        {/* Diff Comparison Block */}
         <div className="w-full mt-10">
            <h2 className="text-3xl font-bold text-white mb-4 text-center">See the difference</h2>
            <p className="text-slate-400 text-center mb-10">Real outputs, real savings. Side-by-side comparison on actual commands.</p>
@@ -300,7 +332,7 @@ export default function Home() {
            </div>
         </div>
 
-        {/* 03 - DETAILED BREAKDOWN */}
+        {/* Data Table Block */}
         <div id="stats" className="w-full mt-10">
            <h3 className="text-2xl font-bold text-white mb-2">Detailed breakdown</h3>
            <p className="text-slate-400 mb-6 text-sm">Daily, weekly, and monthly stats by command. Track your savings over time.</p>
@@ -347,7 +379,7 @@ export default function Home() {
            </div>
         </div>
 
-        {/* 04 - GET STARTED */}
+        {/* Integration Instructions Block */}
         <div id="docs-section" className="w-full mt-10 border-t border-[#1a1a1a] pt-16">
           <h2 className="text-xs font-semibold text-slate-500 tracking-widest uppercase mb-2">// 02 - GET STARTED</h2>
           <h3 className="text-3xl font-bold text-white mb-8">Get started in 30 seconds.</h3>
@@ -399,7 +431,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 05 - PRICING */}
+        {/* Pricing Block */}
         <div id="pricing" className="w-full mt-10">
           <div className="text-center mb-10">
             <h2 className="text-xs font-semibold text-slate-500 tracking-widest uppercase mb-2">// 03 - PRICING</h2>
@@ -436,7 +468,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 06 - FAQ SECTION */}
+        {/* FAQ Section */}
         <div className="w-full mt-20 mb-10">
           <h3 className="text-3xl font-bold text-white mb-8 text-center">Frequently asked questions</h3>
           <div className="space-y-4 max-w-2xl mx-auto">
@@ -469,7 +501,7 @@ export default function Home() {
 
       </div>
 
-      {/* 07 - MEGA FOOTER WITH HASH LINKS */}
+      {/* Footer Area */}
       <footer className="w-full mt-24 pt-16 pb-12 border-t border-[#111] bg-[#020202]">
         <div className="max-w-[1000px] w-full mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 px-6 mb-12">
           
@@ -532,4 +564,4 @@ export default function Home() {
       </footer>
     </div>
   );
-}
+                  }
