@@ -9,10 +9,6 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Generate a secure, random API Key
-    const apiKey = "tt_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-    // Retrieve Upstash Redis credentials from Environment Variables
     const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -20,10 +16,22 @@ export async function POST() {
        return NextResponse.json({ error: "Database credentials missing" }, { status: 500 });
     }
 
-    // Prepare the payload as a strict JSON string
+    // Step 1: Check if the user already has an API key in the database
+    const checkRes = await fetch(`${upstashUrl}/get/user:${userId}:apikey`, {
+      headers: { Authorization: `Bearer ${upstashToken}` }
+    });
+    const checkData = await checkRes.json();
+
+    if (checkData.result) {
+      // If a key already exists, return the existing key. Do not generate a new one.
+      return NextResponse.json({ success: true, apiKey: checkData.result });
+    }
+
+    // Step 2: If no key exists, generate a new secure, random API Key
+    const apiKey = "tt_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const userDataPayload = JSON.stringify({ userId: userId, saved_tokens: 0 });
 
-    // 1. Save API Key -> User Data (Using standard Upstash Array Format)
+    // Save the new API Key with initial token data
     await fetch(upstashUrl, {
       method: 'POST',
       headers: { 
@@ -33,7 +41,7 @@ export async function POST() {
       body: JSON.stringify(["SET", `key:${apiKey}`, userDataPayload])
     });
 
-    // 2. Save User ID -> API Key (For future reference)
+    // Link the new API Key to the user's ID for future retrievals
     await fetch(upstashUrl, {
       method: 'POST',
       headers: { 
