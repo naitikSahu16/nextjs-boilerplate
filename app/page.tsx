@@ -16,8 +16,6 @@ export default function Home() {
 
   const [data, setData] = useState({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
 
-  // Reset state when user logs out. 
-  // Removed the hardcoded tt_founder_999 key.
   useEffect(() => {
     if (!isSignedIn) {
       setKey("");
@@ -40,7 +38,6 @@ export default function Home() {
     document.getElementById("terminal-dashboard")?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Function to call our new API route and generate a real key
   const generateRealKey = async () => {
     setIsGenerating(true);
     try {
@@ -65,31 +62,7 @@ export default function Home() {
     setIsUnlocked(false); 
 
     try {
-      // Connects directly to Upstash to verify key and fetch savings
-      const res = await fetch(`https://clean-sunbird-149824.upstash.io/get/key:${key.trim()}`, {
-        headers: { Authorization: "Bearer gQAAAAAAAkIAAAIgcDFmOWYxNzUzNjkyMWQ0YzRiOTI1NGFkNmU1NmE0NjA4Nw" }
-      });
-      const dbResponse = await res.json();
-      
-      let realTokens = 0;
-      if (dbResponse.result) {
-        const userData = JSON.parse(dbResponse.result);
-        realTokens = userData.saved_tokens || 0;
-      } else if (key.trim() === "tt_founder_999") {
-        realTokens = 138; // Fallback for the dummy key testing
-      } else {
-        throw new Error("Invalid Key");
-      }
-
-      setData({
-        tokens: realTokens,
-        savings: (realTokens / 1000) * 0.015,
-        requests: Math.ceil(realTokens / 45),
-        hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
-      });
-      setIsUnlocked(true); 
-
-    } catch (err) {
+      // Fallback for demo dummy key
       if (key.trim() === "tt_founder_999") {
          let mockTokens = 138;
          setData({
@@ -99,10 +72,35 @@ export default function Home() {
            hitRate: Number((40 + Math.random() * 20).toFixed(1)),
          });
          setIsUnlocked(true);
-      } else {
-         setIsUnlocked(false);
-         alert("❌ Invalid API Key! Access Denied.");
+         setIsAnalyzing(false);
+         return;
       }
+
+      // Secure backend call to our new status route
+      const res = await fetch("/api/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key.trim() })
+      });
+      
+      const responseData = await res.json();
+      
+      if (responseData.valid) {
+        const realTokens = responseData.tokens;
+        setData({
+          tokens: realTokens,
+          savings: (realTokens / 1000) * 0.015,
+          requests: Math.ceil(realTokens / 45),
+          hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
+        });
+        setIsUnlocked(true); 
+      } else {
+        throw new Error("Invalid Key");
+      }
+
+    } catch (err) {
+       setIsUnlocked(false);
+       alert("❌ Invalid API Key! Access Denied.");
     }
     setIsAnalyzing(false);
   };
@@ -209,7 +207,6 @@ export default function Home() {
             </div>
             
             {isSignedIn && !key ? (
-              // Show Generate Button if user is logged in but has no key generated in this session
               <div className="mb-8 p-6 border border-[#222] bg-[#111] rounded-lg">
                  <h4 className="text-white font-bold mb-2">Welcome to TokenTrim!</h4>
                  <p className="text-slate-400 mb-4 text-xs">Generate your unique API key to connect your AI agents to our Edge network.</p>
@@ -218,7 +215,6 @@ export default function Home() {
                  </button>
               </div>
             ) : (
-              // Standard Input Field
               <div className="flex flex-row items-center gap-3 w-full mb-8 max-w-md">
                 <span className="text-slate-500 font-bold">API_KEY=</span>
                 <input type="text" placeholder="Sign in to generate key" value={key} onChange={(e) => setKey(e.target.value)} className="flex-1 bg-[#111] border border-[#333] rounded px-3 py-1.5 text-white outline-none placeholder-slate-700 font-mono focus:border-[#00e5b5]"/>
@@ -564,4 +560,4 @@ export default function Home() {
       </footer>
     </div>
   );
-                  }
+}
