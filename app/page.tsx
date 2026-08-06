@@ -130,9 +130,12 @@ export default function Home() {
         <div className="text-center w-full pt-12 pb-8 flex flex-col items-center relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#00e5b5] opacity-[0.05] blur-[120px] pointer-events-none rounded-full"></div>
 
-          <Link href="/docs" className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0a0a0a] border border-[#222] text-xs font-semibold text-slate-300 mb-8 cursor-pointer hover:border-[#00e5b5]/50 transition-colors shadow-lg">
+          {/* UPDATED: HERO BADGE WITH "Read Docs" */}
+          <Link href="/docs" className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0a0a0a] border border-[#222] text-xs font-semibold text-slate-300 mb-8 cursor-pointer hover:border-[#00e5b5]/50 transition-colors shadow-lg group">
             <span className="w-2 h-2 rounded-full bg-[#00e5b5] animate-pulse"></span>
-            Open Source • Apache 2.0 • Edge Native
+            <span className="hidden sm:inline">Open Source • Apache 2.0 • Edge Native</span>
+            <span className="sm:hidden">Open Source • Edge Native</span>
+            <span className="text-[#00e5b5] ml-1 group-hover:underline">| Read Docs →</span>
           </Link>
 
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6 leading-[1.1] max-w-4xl">
@@ -490,7 +493,6 @@ export default function Home() {
           <div>
             <h4 className="text-white font-bold mb-4 text-sm">INSTALL</h4>
             <ul className="space-y-3 text-sm text-slate-500">
-              {/* REAL LINKS POINTING TO DOCS SECTIONS */}
               <li><Link href="/docs#nodejs" className="hover:text-white transition-colors">Node.js NPM</Link></li>
               <li><Link href="/docs#python" className="hover:text-white transition-colors">Python PIP</Link></li>
               <li><Link href="/docs#cargo" className="hover:text-white transition-colors">Via Cargo</Link></li>
@@ -501,7 +503,6 @@ export default function Home() {
           <div>
             <h4 className="text-white font-bold mb-4 text-sm">DOCS</h4>
             <ul className="space-y-3 text-sm text-slate-500">
-              {/* REAL LINKS POINTING TO DOCS SECTIONS */}
               <li><Link href="/docs#quickstart" className="hover:text-white transition-colors">Quick Start</Link></li>
               <li><Link href="/docs#integration" className="hover:text-white transition-colors">Integration Guide</Link></li>
               <li><Link href="/docs#caching" className="hover:text-white transition-colors">How Caching Works</Link></li>
@@ -522,7 +523,6 @@ export default function Home() {
 
         <div className="max-w-[1000px] mx-auto px-6 pt-8 border-t border-[#111] flex flex-col md:flex-row justify-center items-center gap-8 text-xs text-slate-500">
           <div className="flex gap-6">
-             {/* REAL LINKS POINTING TO LEGAL PAGE */}
              <Link href="/legal#license" className="hover:text-white transition-colors">Apache 2.0 License</Link>
              <Link href="/legal#privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
              <Link href="/legal#terms" className="hover:text-white transition-colors">Terms of Service</Link>
@@ -532,4 +532,3 @@ export default function Home() {
       </footer>
     </div>
   );
-                                                                                                                                 }
