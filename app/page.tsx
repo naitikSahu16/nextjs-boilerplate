@@ -16,11 +16,26 @@ export default function Home() {
 
   const [data, setData] = useState({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
 
+  // Handle session changes and automatically fetch existing API keys on login
   useEffect(() => {
     if (!isSignedIn) {
       setKey("");
       setData({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
       setIsUnlocked(false);
+    } else {
+      // Automatically fetch the user's permanent key from the database
+      const fetchExistingKey = async () => {
+        try {
+          const res = await fetch("/api/generate", { method: "POST" });
+          const responseData = await res.json();
+          if (responseData.apiKey) {
+            setKey(responseData.apiKey);
+          }
+        } catch (error) {
+          console.error("Error retrieving API key");
+        }
+      };
+      fetchExistingKey();
     }
   }, [isSignedIn]);
 
@@ -38,6 +53,7 @@ export default function Home() {
     document.getElementById("terminal-dashboard")?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Manual trigger if the auto-fetch fails or if it is a brand new user
   const generateRealKey = async () => {
     setIsGenerating(true);
     try {
@@ -46,9 +62,8 @@ export default function Home() {
       
       if (responseData.apiKey) {
         setKey(responseData.apiKey);
-        alert("Success! Your live API key is generated and stored in the Edge network.");
       } else {
-        alert("Failed to generate key. Please try again.");
+        alert("Failed to retrieve key. Please try again.");
       }
     } catch (error) {
       alert("Error connecting to server.");
@@ -62,21 +77,7 @@ export default function Home() {
     setIsUnlocked(false); 
 
     try {
-      // Fallback for demo dummy key
-      if (key.trim() === "tt_founder_999") {
-         let mockTokens = 138;
-         setData({
-           tokens: mockTokens,
-           savings: (mockTokens / 1000) * 0.015,
-           requests: Math.ceil(mockTokens / 45),
-           hitRate: Number((40 + Math.random() * 20).toFixed(1)),
-         });
-         setIsUnlocked(true);
-         setIsAnalyzing(false);
-         return;
-      }
-
-      // Secure backend call to our new status route
+      // Secure backend call to check live status
       const res = await fetch("/api/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -209,15 +210,15 @@ export default function Home() {
             {isSignedIn && !key ? (
               <div className="mb-8 p-6 border border-[#222] bg-[#111] rounded-lg">
                  <h4 className="text-white font-bold mb-2">Welcome to TokenTrim!</h4>
-                 <p className="text-slate-400 mb-4 text-xs">Generate your unique API key to connect your AI agents to our Edge network.</p>
+                 <p className="text-slate-400 mb-4 text-xs">Connecting securely to Edge network...</p>
                  <button onClick={generateRealKey} disabled={isGenerating} className="px-6 py-2.5 bg-[#00e5b5] text-black rounded hover:bg-[#00c090] transition-colors disabled:opacity-50 text-xs tracking-wider uppercase font-bold cursor-pointer">
-                   {isGenerating ? "PROVISIONING SERVER..." : "+ GENERATE LIVE API KEY"}
+                   {isGenerating ? "PROVISIONING..." : "REVEAL MY API KEY"}
                  </button>
               </div>
             ) : (
               <div className="flex flex-row items-center gap-3 w-full mb-8 max-w-md">
                 <span className="text-slate-500 font-bold">API_KEY=</span>
-                <input type="text" placeholder="Sign in to generate key" value={key} onChange={(e) => setKey(e.target.value)} className="flex-1 bg-[#111] border border-[#333] rounded px-3 py-1.5 text-white outline-none placeholder-slate-700 font-mono focus:border-[#00e5b5]"/>
+                <input type="text" placeholder="Sign in to generate key" value={key} readOnly={isSignedIn} onChange={(e) => setKey(e.target.value)} className="flex-1 bg-[#111] border border-[#333] rounded px-3 py-1.5 text-white outline-none placeholder-slate-700 font-mono focus:border-[#00e5b5]"/>
               </div>
             )}
 
