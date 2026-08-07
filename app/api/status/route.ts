@@ -17,27 +17,33 @@ export async function POST(req: Request) {
 
     const cleanKey = apiKey.trim();
 
-    // 1. Verify key in Upstash database
+    // 1. Asli Upstash Database se Verify karo
     const keyData = await redis.get(`api_key:${cleanKey}`);
-
     if (!keyData) {
-      // Key not found or expired
-      return NextResponse.json({ valid: false }, { status: 401 });
+      return NextResponse.json({ valid: false }, { status: 401 }); // Key expired or fake
     }
 
-    // 2. PROFESSIONAL FIX: Generate consistent metrics based on the API Key string
-    // This ensures the numbers stay exactly the same for this specific user every time they click.
-    let hash = 0;
-    for (let i = 0; i < cleanKey.length; i++) {
-      hash = cleanKey.charCodeAt(i) + ((hash << 5) - hash);
+    // 2. 100% REAL DATA FETCH 
+    // Jab tu apna Cloudflare proxy banayega, tab wo in keys me data update karega.
+    // Abhi naya user hai, toh database me data nahi hoga, isliye perfectly '0' dikhega.
+    const usageData = await redis.get(`usage_tokens:${cleanKey}`);
+    const hitsData = await redis.get(`cache_hits:${cleanKey}`);
+    const reqsData = await redis.get(`total_requests:${cleanKey}`);
+
+    const realTokens = usageData ? Number(usageData) : 0;
+    const realHits = hitsData ? Number(hitsData) : 0;
+    const realReqs = reqsData ? Number(reqsData) : 0;
+
+    let calculatedHitRate = 0;
+    if (realReqs > 0) {
+      calculatedHitRate = Math.round((realHits / realReqs) * 100);
     }
-    
-    // Convert the hash into a realistic token usage number between 1.5M and 5.5M
-    const consistentTokens = (Math.abs(hash) % 4000000) + 1500000;
 
     return NextResponse.json({ 
       valid: true,
-      tokens: consistentTokens
+      tokens: realTokens,
+      requests: realReqs,
+      hitRate: calculatedHitRate
     });
 
   } catch (error) {
