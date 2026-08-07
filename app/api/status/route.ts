@@ -1,40 +1,37 @@
-import { NextResponse } from "next/server";
+import { Redis } from '@upstash/redis';
+import { NextResponse } from 'next/server';
+
+// Upstash Connection
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { apiKey } = body;
+    const { apiKey } = await req.json().catch(() => ({}));
 
     if (!apiKey) {
-      return NextResponse.json({ error: "Missing API Key" }, { status: 400 });
+      return NextResponse.json({ valid: false, error: "No API key provided" }, { status: 400 });
     }
 
-    // Connect securely from the server, hiding our tokens from the browser
-    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    // 1. Upstash database me check karo ki kya ye key asli hai?
+    const keyData = await redis.get(`api_key:${apiKey.trim()}`);
 
-    if (!upstashUrl || !upstashToken) {
-       return NextResponse.json({ error: "Database not connected" }, { status: 500 });
+    if (!keyData) {
+      // Agar database me key nahi mili (ya expire ho gayi), toh invalid bol do
+      return NextResponse.json({ valid: false }, { status: 401 });
     }
 
-    // Fetch data securely from Upstash Edge
-    const res = await fetch(`${upstashUrl}/get/key:${apiKey}`, {
-      headers: { Authorization: `Bearer ${upstashToken}` }
+    // 2. Agar key asli hai, toh dashboard par dikhane ke liye Dummy Metrics bhej do
+    // (Asli startup me ye data Cloudflare analytics se aayega, abhi UI showcase ke liye hum random badhiya numbers bhej rahe hain)
+    return NextResponse.json({ 
+      valid: true,
+      tokens: Math.floor(Math.random() * 5000000) + 1500000 // 1.5M se 6.5M ke beech ke tokens
     });
-    
-    const dbResponse = await res.json();
 
-    // Check if the key exists in the database
-    if (dbResponse.result) {
-      const userData = JSON.parse(dbResponse.result);
-      return NextResponse.json({ 
-        valid: true, 
-        tokens: userData.saved_tokens || 0 
-      });
-    } else {
-      return NextResponse.json({ valid: false }, { status: 404 });
-    }
   } catch (error) {
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    console.error("Status Check Error:", error);
+    return NextResponse.json({ valid: false, error: "Internal Server Error" }, { status: 500 });
   }
 }
