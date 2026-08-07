@@ -66,6 +66,7 @@ export default function Home() {
     setIsGenerating(false);
   };
 
+  // 100% REAL DATA FETCHING LOGIC
   const checkSavings = async () => {
     if (!key.trim()) { alert("Please enter an API Key first."); return; }
     setIsAnalyzing(true);
@@ -81,12 +82,12 @@ export default function Home() {
       const responseData = await res.json();
       
       if (responseData.valid) {
-        const realTokens = responseData.tokens;
+        // Asli numbers display honge bina kisi fake Math.random() ke
         setData({
-          tokens: realTokens,
-          savings: (realTokens / 1000) * 0.015,
-          requests: Math.ceil(realTokens / 45),
-          hitRate: realTokens > 0 ? Number((40 + Math.random() * 20).toFixed(1)) : 0,
+          tokens: responseData.tokens,
+          savings: (responseData.tokens / 1000) * 0.015,
+          requests: responseData.requests,
+          hitRate: responseData.hitRate,
         });
         setIsUnlocked(true); 
       } else {
@@ -99,7 +100,6 @@ export default function Home() {
     setIsAnalyzing(false);
   };
 
-  // 🚀 REAL PROFESSIONAL TRIAL HANDLER
   const handleTrialRequest = async () => {
     if (!isSignedIn) {
       alert("⚠️ Please Log In first to claim your 3-Day Free Trial!");
@@ -108,11 +108,10 @@ export default function Home() {
     setTrialLoading(true);
     
     try {
-      // Backend (Next.js/Cloudflare) ko request bhejna
       const res = await fetch("/api/generate", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro_trial" }) // Tell backend it's a trial
+        body: JSON.stringify({ plan: "pro_trial" }) 
       });
       const responseData = await res.json();
       
@@ -550,5 +549,4 @@ export default function Home() {
       </footer>
     </div>
   );
-}
-  
+                                                                        }
