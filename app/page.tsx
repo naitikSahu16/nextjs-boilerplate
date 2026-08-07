@@ -45,10 +45,6 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleProClick = () => {
-    alert("🚀 Stripe Checkout Page will open here! (Payment gateway integration pending)");
-  };
-
   const scrollToTerminal = () => {
     document.getElementById("terminal-dashboard")?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -329,7 +325,7 @@ export default function Home() {
            </div>
         </div>
 
-        {/* Data Table Block */}
+         {/* Data Table Block */}
         <div id="stats" className="w-full mt-10">
            <h3 className="text-2xl font-bold text-white mb-2">Detailed breakdown</h3>
            <p className="text-slate-400 mb-6 text-sm">Daily, weekly, and monthly stats by command. Track your savings over time.</p>
@@ -453,14 +449,14 @@ export default function Home() {
               <div className="absolute top-0 right-0 bg-[#00e5b5] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">PRO</div>
               <h3 className="text-xl font-bold text-white mb-2">Enterprise</h3>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl font-bold text-white">$19</span>
+                <span className="text-4xl font-bold text-white">$15</span>
                 <span className="text-slate-500">/ month</span>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> <span className="text-white font-bold">Unlimited</span> cached requests</li>
                 <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Priority Global Edge Network</li>
               </ul>
-              <button onClick={handleProClick} className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-all cursor-pointer">Go Pro</button>
+              <a href="mailto:naitikop1616@gmail.com?subject=Requesting TokenTrim 3-Day Pro Trial" className="block text-center w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-all cursor-pointer">Get 3-Day Free Trial</a>
             </div>
           </div>
         </div>
