@@ -5,11 +5,12 @@ import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function Home() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [key, setKey] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false); 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [trialLoading, setTrialLoading] = useState(false);
   
   const [activeTab, setActiveTab] = useState("node");
   const [copied, setCopied] = useState(false);
@@ -23,7 +24,6 @@ export default function Home() {
       setData({ tokens: 0, savings: 0, requests: 0, hitRate: 0 });
       setIsUnlocked(false);
     } else {
-      // Automatically fetch the user's permanent key from the database
       const fetchExistingKey = async () => {
         try {
           const res = await fetch("/api/generate", { method: "POST" });
@@ -49,7 +49,6 @@ export default function Home() {
     document.getElementById("terminal-dashboard")?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Manual trigger if the auto-fetch fails or if it is a brand new user
   const generateRealKey = async () => {
     setIsGenerating(true);
     try {
@@ -73,7 +72,6 @@ export default function Home() {
     setIsUnlocked(false); 
 
     try {
-      // Secure backend call to check live status
       const res = await fetch("/api/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -94,7 +92,6 @@ export default function Home() {
       } else {
         throw new Error("Invalid Key");
       }
-
     } catch (err) {
        setIsUnlocked(false);
        alert("❌ Invalid API Key! Access Denied.");
@@ -102,11 +99,31 @@ export default function Home() {
     setIsAnalyzing(false);
   };
 
+  // PROFESSIONAL TRIAL HANDLER
+  const handleTrialRequest = async () => {
+    if (!isSignedIn) {
+      alert("⚠️ Please Log In first to claim your 3-Day Free Trial!");
+      return;
+    }
+    setTrialLoading(true);
+    
+    // Future Backend Logic Will Go Here
+    setTimeout(() => {
+      alert("🚀 Checking eligibility... (Backend API integration pending to lock 1 trial per user)");
+      setTrialLoading(false);
+    }, 1500);
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden">
       
+      {/* 🚀 MARKETING FOMO BANNER */}
+      <div className="w-full bg-[#00e5b5] text-black font-bold text-center py-2.5 px-4 text-xs md:text-sm tracking-wide z-50">
+        🎉 SPECIAL LAUNCH OFFER: Claim your 3-Day Enterprise Trial for FREE! (Paid starting Nov 1st)
+      </div>
+
       {/* Navigation Bar */}
-      <nav className="flex items-center justify-between w-full max-w-[1100px] px-6 py-4 bg-[#050505]/90 backdrop-blur-md sticky top-0 z-50 border-b border-[#1a1a1a]">
+      <nav className="flex items-center justify-between w-full max-w-[1100px] px-6 py-4 bg-[#050505]/90 backdrop-blur-md sticky top-0 z-40 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5b5] to-[#008f71] flex items-center justify-center shadow-[0_0_15px_rgba(0,229,181,0.4)]">
             <span className="text-black font-bold text-lg">T</span>
@@ -325,53 +342,6 @@ export default function Home() {
            </div>
         </div>
 
-         {/* Data Table Block */}
-        <div id="stats" className="w-full mt-10">
-           <h3 className="text-2xl font-bold text-white mb-2">Detailed breakdown</h3>
-           <p className="text-slate-400 mb-6 text-sm">Daily, weekly, and monthly stats by command. Track your savings over time.</p>
-           
-           <div className="bg-[#0c0c0c] border border-[#1a1a1a] rounded-xl overflow-x-auto">
-              <table className="w-full text-left font-mono text-xs whitespace-nowrap">
-                 <thead className="bg-[#111] text-slate-500 uppercase tracking-wider">
-                    <tr>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold">Date</th>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold">Cmds</th>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold">Input</th>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold">Output</th>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold text-[#00e5b5]">Saved</th>
-                       <th className="px-4 py-3 border-b border-[#222] font-semibold">Hit %</th>
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-[#1a1a1a] text-slate-300">
-                    {[
-                      { d: '2026-08-05', c: '389', i: '2M', o: '50K', s: '1.8M', h: '90%' },
-                      { d: '2026-08-04', c: '412', i: '2.1M', o: '55K', s: '1.9M', h: '91%' },
-                      { d: '2026-08-03', c: '250', i: '1.2M', o: '30K', s: '1.1M', h: '88%' },
-                      { d: '2026-08-02', c: '501', i: '3M', o: '80K', s: '2.7M', h: '93%' },
-                      { d: '2026-08-01', c: '190', i: '900K', o: '20K', s: '850K', h: '85%' },
-                    ].map((row, i) => (
-                      <tr key={i} className="hover:bg-[#111] transition-colors">
-                         <td className="px-4 py-3">{row.d}</td>
-                         <td className="px-4 py-3">{row.c}</td>
-                         <td className="px-4 py-3">{row.i}</td>
-                         <td className="px-4 py-3">{row.o}</td>
-                         <td className="px-4 py-3 text-[#00e5b5] font-bold">{row.s}</td>
-                         <td className="px-4 py-3 text-slate-500">{row.h}</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-[#111] font-bold">
-                       <td className="px-4 py-3">TOTAL (5d)</td>
-                       <td className="px-4 py-3">1,742</td>
-                       <td className="px-4 py-3">9.2M</td>
-                       <td className="px-4 py-3">235K</td>
-                       <td className="px-4 py-3 text-[#00e5b5]">8.3M</td>
-                       <td className="px-4 py-3 text-[#00e5b5]">89.6%</td>
-                    </tr>
-                 </tbody>
-              </table>
-           </div>
-        </div>
-
         {/* Integration Instructions Block */}
         <div id="docs-section" className="w-full mt-10 border-t border-[#1a1a1a] pt-16">
           <h2 className="text-xs font-semibold text-slate-500 tracking-widest uppercase mb-2">// 02 - GET STARTED</h2>
@@ -449,14 +419,22 @@ export default function Home() {
               <div className="absolute top-0 right-0 bg-[#00e5b5] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">PRO</div>
               <h3 className="text-xl font-bold text-white mb-2">Enterprise</h3>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl font-bold text-white">$15</span>
-                <span className="text-slate-500">/ month</span>
+                <span className="text-4xl font-bold text-[#00e5b5]">$0</span>
+                <span className="text-slate-500 line-through mr-1">$15</span>
+                <span className="text-slate-500">/ for 3 days</span>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> <span className="text-white font-bold">Unlimited</span> cached requests</li>
                 <li className="flex items-center gap-3 text-sm text-slate-300"><svg className="w-5 h-5 text-[#00e5b5]" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Priority Global Edge Network</li>
               </ul>
-              <a href="mailto:naitikop1616@gmail.com?subject=Requesting TokenTrim 3-Day Pro Trial" className="block text-center w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-all cursor-pointer">Get 3-Day Free Trial</a>
+              <button 
+                onClick={handleTrialRequest} 
+                disabled={trialLoading}
+                className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-all cursor-pointer disabled:opacity-70 flex justify-center items-center gap-2"
+              >
+                {trialLoading ? "Checking Access..." : "Start 3-Day Free Trial"}
+              </button>
+              <p className="text-[10px] text-center text-slate-500 mt-3 font-medium uppercase tracking-wider">No Credit Card Required</p>
             </div>
           </div>
         </div>
