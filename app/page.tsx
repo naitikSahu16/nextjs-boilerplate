@@ -99,7 +99,7 @@ export default function Home() {
     setIsAnalyzing(false);
   };
 
-  // PROFESSIONAL TRIAL HANDLER
+  // 🚀 REAL PROFESSIONAL TRIAL HANDLER
   const handleTrialRequest = async () => {
     if (!isSignedIn) {
       alert("⚠️ Please Log In first to claim your 3-Day Free Trial!");
@@ -107,17 +107,32 @@ export default function Home() {
     }
     setTrialLoading(true);
     
-    // Future Backend Logic Will Go Here
-    setTimeout(() => {
-      alert("🚀 Checking eligibility... (Backend API integration pending to lock 1 trial per user)");
-      setTrialLoading(false);
-    }, 1500);
+    try {
+      // Backend (Next.js/Cloudflare) ko request bhejna
+      const res = await fetch("/api/generate", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro_trial" }) // Tell backend it's a trial
+      });
+      const responseData = await res.json();
+      
+      if (responseData.apiKey) {
+        setKey(responseData.apiKey);
+        alert("🎉 Trial Activated! Your Pro API Key has been generated. Scroll up to the Dashboard to see it.");
+        scrollToTerminal();
+      } else {
+        alert("⚠️ Could not generate trial key. You might have already used your trial.");
+      }
+    } catch (error) {
+      alert("❌ Error connecting to server. Please try again.");
+    }
+    setTrialLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col items-center selection:bg-[#00e5b5] selection:text-black overflow-x-hidden">
       
-      {/* 🚀 MARKETING FOMO BANNER */}
+      {/* MARKETING FOMO BANNER */}
       <div className="w-full bg-[#00e5b5] text-black font-bold text-center py-2.5 px-4 text-xs md:text-sm tracking-wide z-50">
         🎉 SPECIAL LAUNCH OFFER: Claim your 3-Day Enterprise Trial for FREE! (Paid starting Nov 1st)
       </div>
@@ -432,7 +447,7 @@ export default function Home() {
                 disabled={trialLoading}
                 className="w-full bg-[#00e5b5] text-black font-bold py-3 rounded-xl hover:bg-[#00c090] transition-all cursor-pointer disabled:opacity-70 flex justify-center items-center gap-2"
               >
-                {trialLoading ? "Checking Access..." : "Start 3-Day Free Trial"}
+                {trialLoading ? "Activating..." : "Start 3-Day Free Trial"}
               </button>
               <p className="text-[10px] text-center text-slate-500 mt-3 font-medium uppercase tracking-wider">No Credit Card Required</p>
             </div>
@@ -536,3 +551,4 @@ export default function Home() {
     </div>
   );
 }
+  
